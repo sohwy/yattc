@@ -1,8 +1,17 @@
 {
-	"param1": {
-		"is_bool": false,
-		"is_int": false,
-		"value": [0.19, 0.19, 0.19],
-		"row_vars": [2001, 2002, 2003]
-	}
+    "_param1": {
+        "is_bool": false,
+        "is_int": false,
+        "value": [0.19, 0.19, 0.19],
+        "row_vars": [2001, 2002, 2003],
+		"frequency": "annual"
+    },
+
+    "_param2": {
+        "is_bool": false,
+        "is_int": false,
+        "value": [0.35, 0.35, 0.35],
+        "row_vars": [["2001", "07", "01"], ["2001", "09", "20"]],
+		"frequency": "quarterly"
+    }
 }
