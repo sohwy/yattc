@@ -2,10 +2,10 @@
 Inflation class
 """
 
-# import json
+import json
 import datetime
 import numpy as np
-# import pandas as pd
+import pandas as pd
 
 
 class Inflation():
@@ -88,7 +88,7 @@ param_q = np.repeat(param, 4)[:len_known]
 print(param_q)
 
 start_known = datetime.date(2000, 7, 1)  # first known period
-end_known = datetime.date(2001, 3, 20)  # last known period
+end_known = datetime.date(2004, 3, 20)  # last known period
 forward_len = 4  # number of periods in forward period
 
 # this creates the list of dates from the start to end of forwards period
@@ -102,44 +102,27 @@ def make_date_list(start_known, end_known, forward_len):
         x.append(increment_quarter2(x[-1]))
     return x
 
-print(make_date_list(start_known, end_known, forward_len))
+date_list = make_date_list(start_known, end_known, forward_len)
+print(date_list)
+print(len(date_list))
 
-def expand_array(values, num_periods):
-    values = np.array(values)
+
+current_len = round((end_known - start_known).days / 91.25 + 1)
+print(current_len)
+def expand_array(values, frequency, num_periods):
+    print('inside expand_array')
+    values = np.repeat(values, frequency)
+    print(values)
+    # check that expanded length of known params is right
+    assert len(values) == current_len
     ans = np.zeros(num_periods, dtype=np.float64)
     ans[:len(values)] = values
     extra = [float(values[-1]) for i in range(0, num_periods - len(values))]
     ans[len(values):] = extra
     return ans
 
-param_expanded = expand_array(param, 8)
+param_expanded = expand_array(param, 4, 23)
+# param_expanded = expand_array(param, 1, 23)
 print(param_expanded)
 print(type(param_expanded))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
