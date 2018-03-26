@@ -103,7 +103,7 @@ class Parameters(object):
                 print(param, data)
                 values = data['values']
                 short_name = data['short_name']
-                inflation_rates = None
+                inflation_rates = self.vals.get('index_method')
                 if len(values) != self._num_cur_periods:
                     msg = 'Incorrect number of parameter values specified ' \
                           'in the parameter: {}'
@@ -112,8 +112,8 @@ class Parameters(object):
                                                        inflation_rates,
                                                        self._num_periods,
                                                        short_name))
-            self.set_period(self._current_period.year,
-                            self._current_period.quarter)
+            self.set_period(self.current_period.year,
+                            self.current_period.quarter)
 
     def expand_array(self, vals, inflation_rates, expanded_dim, param_name):
         """
@@ -142,10 +142,10 @@ class Parameters(object):
         (2)
             Set the data type for the pandas array
         """
-        # Create array of NaNs of length equal to the dimension of the 
+        # Create array of NaNs of length equal to the dimension of the
         # expanded parameter array
         expanded_param = pd.Series(np.full(expanded_dim, np.nan),
-                                   pd.PeriodIndex(start=self._current_period,
+                                   pd.PeriodIndex(start=self.current_period,
                                                   periods=expanded_dim,
                                                   freq='Q'),
                                    name=param_name)
@@ -232,15 +232,29 @@ class Parameters(object):
         # implement the reforms period by period
         precall_current_period = self.current_period
         for period in reform_periods:
-            print(period)
+            self.update_parameter(period, reform[period])
+        self.set_period(precall_current_period.year,
+                        precall_current_period.quarter)
 
-        # self.set_period(precall_current_period)
-
-    def update_parameter(self, parameter_change):
+    def update_parameter(self, period, param_val_dict):
         """
         docstring
+        input is a {period: {param: val},...,{param: val}} dict
         """
-
+        # calculate dimension required for the expanded array
+        expanded_dim = self.periods.iloc[-1] - self.periods.loc[period] + 1
+        # iterate through each param: val pair in the reforms for the period
+        # and overwrite the existing value in self.vals with the new values
+        for param, values in param_val_dict.items():
+            if param not in self.vals.keys():
+                raise NameError('{} not a valid parameter name'.format(param))
+            if not isinstance(values, list):
+                raise ValueError('Parameter values must be a list')
+            inflation_rates = self.vals.get('index_method')
+            current_vals = getattr(self, param, None)
+            new_vals = self.expand_array(values, inflation_rates,
+                                         expanded_dim, param)
+            current_vals[self.periods.loc[period]:] = new_vals
 
     def read_reform_json(self, reform_json):
         """
@@ -307,7 +321,8 @@ print(p._param_1)
 print(p.param_1)
 print(p._param_2)
 print(p.param_2)
-# 
+# print(p._param_3)
+print(p.param_3)
 # 
 # print(' ')
 # print(type(p._start), p.start_period)
