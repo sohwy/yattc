@@ -110,14 +110,12 @@ class Parameters(object):
                     raise ValueError(msg.format(param))
                 setattr(self, param, self.expand_array(values,
                                                        inflation_rates,
-                                                       self._num_cur_periods,
                                                        self._num_periods,
                                                        short_name))
             self.set_period(self._current_period.year,
                             self._current_period.quarter)
 
-    def expand_array(self, vals, inflation_rates, known_periods,
-                     num_periods, param_name):
+    def expand_array(self, vals, inflation_rates, expanded_dim, param_name):
         """
         Expand the given parameter vector to cover the forward period and
         inflate the parameter values
@@ -128,8 +126,8 @@ class Parameters(object):
             List or numpy array of parameter values
         inflation_rates: list, numpy array
             List or numpy array of inflation rates to apply to vals
-        num_periods: int
-            Number of periods to expand vals by
+        expanded_dim: int
+            Dimension of expanded parameter array
         param_name: str
             Descriptive name for the parameter
 
@@ -144,23 +142,19 @@ class Parameters(object):
         (2)
             Set the data type for the pandas array
         """
-        # Expand the vector to cover the forward period and put NaN as a
-        # placeholder value for forward period parameters initially
-        expanded_param = pd.Series(np.full(num_periods, np.nan),
+        # Create array of NaNs of length equal to the dimension of the 
+        # expanded parameter array
+        expanded_param = pd.Series(np.full(expanded_dim, np.nan),
                                    pd.PeriodIndex(start=self._current_period,
-                                                  periods=num_periods,
+                                                  periods=expanded_dim,
                                                   freq='Q'),
                                    name=param_name)
-
-        expanded_param[:known_periods] = vals
-
+        # Replace NaN values with actual parameter values
+        expanded_param[:len(vals)] = vals
         # Propogate the last known parameter value forward and inflate
         # iteratively replacing each of the NaNs
-        # for i in range(self._num_cur_periods, self._num_periods):
-            # expanded_param.iloc[i] = 1 + expanded_param.iloc[i-1]
-            # you could inflate the parameters around here
-        for i in range(known_periods, num_periods):
-            expanded_param.iloc[i] = 1 + expanded_param.iloc[i-1]
+        for i in range(len(vals), expanded_dim):
+            expanded_param.iloc[i] = expanded_param.iloc[i-1]
         return expanded_param
 
     def set_period(self, target_year, target_quarter):
