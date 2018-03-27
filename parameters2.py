@@ -29,7 +29,7 @@ class Parameters(object):
 
     def __init__(self, parameter_dict=None, periods=DEFAULT_PERIODS,
                  num_fwd_periods=DEFAULT_NUM_FWD_PERIODS):
-
+#this is param-arrays branch
 #         self._periods = periods
 #         self._start = periods[0]
 #         self._end = periods[-1]
@@ -142,8 +142,6 @@ class Parameters(object):
         (2)
             Set the data type for the pandas array
         """
-        # Create array of NaNs of length equal to the dimension of the
-        # expanded parameter array
         expanded_param = pd.Series(np.full(expanded_dim, np.nan),
                                    pd.PeriodIndex(start=self.current_period,
                                                   periods=expanded_dim,
@@ -156,29 +154,6 @@ class Parameters(object):
         for i in range(len(vals), expanded_dim):
             expanded_param.iloc[i] = expanded_param.iloc[i-1]
         return expanded_param
-
-    def expand_array_1D(self, vals, inflation_rates, expanded_dim, param_name):
-        """
-        scalar parameter expansion
-        """
-        expanded_param = pd.Series(np.full(expanded_dim, np.nan),
-                                   pd.PeriodIndex(start=self.current_period,
-                                                  periods=expanded_dim,
-                                                  freq='Q'),
-                                   name=param_name)
-        # Replace NaN values with actual parameter values
-        expanded_param[:len(vals)] = vals
-        # Propogate the last known parameter value forward and inflate
-        # iteratively replacing each of the NaNs
-        for i in range(len(vals), expanded_dim):
-            expanded_param.iloc[i] = expanded_param.iloc[i-1]
-        return expanded_param
-
-    def expand_array_2D(self, vals, inflation_rates, expanded_dim, param_name):
-        """
-        array parameter expansion
-        """
-        pass
 
     def set_period(self, target_year, target_quarter):
         """
