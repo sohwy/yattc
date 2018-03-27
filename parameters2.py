@@ -157,6 +157,29 @@ class Parameters(object):
             expanded_param.iloc[i] = expanded_param.iloc[i-1]
         return expanded_param
 
+    def expand_array_1D(self, vals, inflation_rates, expanded_dim, param_name):
+        """
+        scalar parameter expansion
+        """
+        expanded_param = pd.Series(np.full(expanded_dim, np.nan),
+                                   pd.PeriodIndex(start=self.current_period,
+                                                  periods=expanded_dim,
+                                                  freq='Q'),
+                                   name=param_name)
+        # Replace NaN values with actual parameter values
+        expanded_param[:len(vals)] = vals
+        # Propogate the last known parameter value forward and inflate
+        # iteratively replacing each of the NaNs
+        for i in range(len(vals), expanded_dim):
+            expanded_param.iloc[i] = expanded_param.iloc[i-1]
+        return expanded_param
+
+    def expand_array_2D(self, vals, inflation_rates, expanded_dim, param_name):
+        """
+        array parameter expansion
+        """
+        pass
+
     def set_period(self, target_year, target_quarter):
         """
         Set as attributes the values of each parameter for the current period
@@ -321,8 +344,6 @@ print(p._param_1)
 print(p.param_1)
 print(p._param_2)
 print(p.param_2)
-# print(p._param_3)
-print(p.param_3)
 # 
 # print(' ')
 # print(type(p._start), p.start_period)
