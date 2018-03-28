@@ -2,5 +2,6 @@
 	"_comment1": "This is my comment",
 	"2001Q4": {"_param_1": [0.099], "_param_2": [4.001, 4.002]},
 	"_comment2": "Can i have another comment?",
-	"2007Q2": {"_param_2": [4.099]}
+	"2007Q2": {"_param_2": [4.099]},
+	"2007Q4": {"_param_3": [[1, 4.099]]}
 }

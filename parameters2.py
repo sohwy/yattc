@@ -102,20 +102,20 @@ class Parameters(object):
             for param, data in self.vals.items():
                 print(param, data)
                 values = data['values']
-                short_name = data['short_name']
-                inflation_rates = self.vals.get('index_method')
+                column_names = data.get('columns', ['Values'])
+                inflation_rates = data.get('index_method', None)
                 if len(values) != self._num_cur_periods:
                     msg = 'Incorrect number of parameter values specified ' \
                           'in the parameter: {}'
                     raise ValueError(msg.format(param))
                 setattr(self, param, self.expand_array(values,
                                                        inflation_rates,
-                                                       self._num_periods,
-                                                       short_name))
+                                                       column_names,
+                                                       self._num_periods))
             self.set_period(self.current_period.year,
                             self.current_period.quarter)
 
-    def expand_array(self, vals, inflation_rates, expanded_dim, param_name):
+    def expand_array(self, vals, inflation_rates, cols, expanded_rows):
         """
         Expand the given parameter vector to cover the forward period and
         inflate the parameter values
@@ -142,18 +142,17 @@ class Parameters(object):
         (2)
             Set the data type for the pandas array
         """
-        expanded_param = pd.Series(np.full(expanded_dim, np.nan),
-                                   pd.PeriodIndex(start=self.current_period,
-                                                  periods=expanded_dim,
+        param = pd.DataFrame(vals,
+                             index=pd.PeriodIndex(start=self.current_period,
+                                                  periods=len(vals),
                                                   freq='Q'),
-                                   name=param_name)
-        # Replace NaN values with actual parameter values
-        expanded_param[:len(vals)] = vals
-        # Propogate the last known parameter value forward and inflate
-        # iteratively replacing each of the NaNs
-        for i in range(len(vals), expanded_dim):
-            expanded_param.iloc[i] = expanded_param.iloc[i-1]
-        return expanded_param
+                             columns=cols)
+        param = param.reindex(pd.PeriodIndex(start=self.current_period,
+                                             periods=expanded_rows,
+                                             freq='Q'))
+        for i in range(len(vals), expanded_rows):
+            param.iloc[i] = param.iloc[i-1]
+        return param
 
     def set_period(self, target_year, target_quarter):
         """
@@ -230,6 +229,7 @@ class Parameters(object):
         # implement the reforms period by period
         precall_current_period = self.current_period
         for period in reform_periods:
+            self._current_period = pd.Period(period, freq='Q')
             self.update_parameter(period, reform[period])
         self.set_period(precall_current_period.year,
                         precall_current_period.quarter)
@@ -249,9 +249,13 @@ class Parameters(object):
             if not isinstance(values, list):
                 raise ValueError('Parameter values must be a list')
             inflation_rates = self.vals.get('index_method')
+            # idx = pd.PeriodIndex(start=self.current_period,
+            #                      periods=len(values),
+            #                      freq='Q')
+            column_names = self.vals[param].get('columns', ['Values'])
             current_vals = getattr(self, param, None)
             new_vals = self.expand_array(values, inflation_rates,
-                                         expanded_dim, param)
+                                         column_names, expanded_dim)
             current_vals[self.periods.loc[period]:] = new_vals
 
     def read_reform_json(self, reform_json):
@@ -288,27 +292,11 @@ class Parameters(object):
 
 
 p = Parameters()
-# import io
-# output = io.StringIO()
-# with open('reform_params.json') as f:
-#     for line in f:
-#         if not line.lstrip().startswith('//'):
-#             output.write(line)
-#     reform = json.loads(output.getvalue())
-# 
-# print(reform)
 
 reform = p.read_reform_json('reform_params.json')
 print(reform)
 p.implement_reforms(reform)
 
-
-
-
-
-
-
-# print(p._start, p.start_period)
 print(type(p._start))
 # print(p._end, p.end_period)
 # print(p._current_period, p.current_period)
@@ -319,64 +307,5 @@ print(p._param_1)
 print(p.param_1)
 print(p._param_2)
 print(p.param_2)
-# 
-# print(' ')
-# print(type(p._start), p.start_period)
-# print(p.start_period.ordinal)
-# print(' ')
-# p.set_period(2004, 4)
-# print(p.current_period)
-# print(p.param_1)
-# 
-# 
-# p.set_period(1999, 4)
-
-
-
-
-
-
-
-
-
-
-# print(p._periods, p._start, p._end, p.vals)
-# print(p.periods)
-
-# with open('test_params.json') as f:
-#     params = json.load(f)
-# 
-# print(params)
-# print(params['param_a']['values'])
-# 
-# start_qtr = "2000Q3"
-# end_qtr = "2004Q2"
-# fwd_len = 4
-# cur_len = 16
-# tot_len = fwd_len + cur_len
-# 
-# def expand_array2(param):
-#     ans = np.full(tot_len, np.nan)
-#     ans = pd.Series(ans, pd.PeriodIndex(start=start_qtr, periods=tot_len, freq='Q'))
-#     ans[:cur_len] = params['param_q']['values']
-# 
-# print(ans)
-# 
-# def inflate_value(value, current_quarter, method):
-#     print(current_quarter)
-#     if current_quarter in params['param_q']['index_quarters']:
-#         return inflate_mapping[method](value)
-#     return value
-# 
-# def inflate_cpi(value):
-#     return value + 0.1
-# 
-# def inflate_mtawe(value):
-#     return value - 0.1
-# 
-# inflate_mapping = {"cpi": inflate_cpi, "mtawe": inflate_mtawe}
-# 
-# for i in range(cur_len, tot_len):
-#     ans.iloc[i] = inflate_value(ans.iloc[i-1], ans.index[i].quarter, "cpi")
-# 
-# print(ans)
+print(p._param_3)
+print(p.param_3)
