@@ -102,7 +102,7 @@ class Parameters(object):
             for param, data in self.vals.items():
                 print(param, data)
                 values = data['values']
-                column_names = data.get('columns', ['Values'])
+                column_names = data.get('columns', ['values'])
                 inflation_rates = data.get('index_method', None)
                 if len(values) != self._num_cur_periods:
                     msg = 'Incorrect number of parameter values specified ' \
@@ -252,7 +252,7 @@ class Parameters(object):
             # idx = pd.PeriodIndex(start=self.current_period,
             #                      periods=len(values),
             #                      freq='Q')
-            column_names = self.vals[param].get('columns', ['Values'])
+            column_names = self.vals[param].get('columns', ['values'])
             current_vals = getattr(self, param, None)
             new_vals = self.expand_array(values, inflation_rates,
                                          column_names, expanded_dim)
