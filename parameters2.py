@@ -29,28 +29,16 @@ class Parameters(object):
 
     def __init__(self, parameter_dict=None, periods=DEFAULT_PERIODS,
                  num_fwd_periods=DEFAULT_NUM_FWD_PERIODS):
-#this is param-arrays branch
-#         self._periods = periods
-#         self._start = periods[0]
-#         self._end = periods[-1]
-#         self._current_period = self._start
         self._num_cur_periods = len(periods)
         self._num_fwd_periods = num_fwd_periods
         self._num_periods = self._num_cur_periods + self._num_fwd_periods
-        # self._periods =  pd.Series(range(0, self._num_periods),
-        #                            pd.PeriodIndex(start=self._start,
-        #                                           periods=self._num_periods,
-        #                                           freq='Q'))
         self._periods = pd.Series(range(0, self._num_periods),
                                   pd.PeriodIndex(start=periods[0],
                                                  periods=self._num_periods,
                                                  freq='Q'))
         self._start = self._periods.index[0]
         self._end = self._periods.index[-1]
-        # self._start = pd.Period(periods[0], freq='Q')
-        # self._end = pd.Period(periods[-1], freq='Q')
         self._current_period = self._start
-
 
         # Read in parameters
         if parameter_dict is None:

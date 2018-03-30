@@ -1,3 +1,33 @@
 {
-	"hello": "world"
+	"cpi": {
+		"notes": "if you add more values you need to also change end_period",
+		"short_name": "consumer price index",
+		"description": "this is just a parameter",
+		"product": "",
+		"product_name": "",
+		"series_id": "",
+		"series_name": "",
+		"notes": "",
+		"values": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+		"start_period": "2000Q3",
+		"end_period": "2007Q4",
+		"freq": "biannual",
+		"index_quarters": [2, 4]
+	},
+
+	"mte": {
+		"notes": "if you add more values you need to also change end_period",
+		"short_name": "male total earnings",
+		"description": "this is just a parameter",
+		"product": "",
+		"product_name": "",
+		"series_id": "",
+		"series_name": "",
+		"notes": "",
+		"values": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+		"start_period": "2000Q3",
+		"end_period": "2007Q4",
+		"freq": "biannual",
+		"index_quarters": [2, 4]
+	}
 }

@@ -38,19 +38,19 @@ class Indexation():
     def inflate_func(self, x):
         return x + 1
 
-a = pd.Series(range(3))
-b = {'col1':[1, 1, 1], 'col2': [2, 2, 2]}
-c = pd.DataFrame(data=b)
-print(a)
-print(c)
-z = [1, 2]
-y = [3, 4]
-ind = Indexation()
-print(ind.add(1, 2))
-print(ind.add(z, y))
-print(ind.add(a, 7))
-print(ind.add(c, 7))
-
+# a = pd.Series(range(3))
+# b = {'col1':[1, 1, 1], 'col2': [2, 2, 2]}
+# c = pd.DataFrame(data=b)
+# print(a)
+# print(c)
+# z = [1, 2]
+# y = [3, 4]
+# ind = Indexation()
+# print(ind.add(1, 2))
+# print(ind.add(z, y))
+# print(ind.add(a, 7))
+# print(ind.add(c, 7))
+# 
 
 class Index(object):
     """
@@ -61,23 +61,37 @@ class Index(object):
             'cpi_change_': 'http://stat.data.abs.gov.au/sdmx-json/data/CPI/2.50.10001.10.Q/all?detail=DataOnly&dimensionAtObservation=AllDimensions&startPeriod=2000-Q1&endPeriod=2018xx'}
 
     DEFAULT_FILENAME = 'indexation.json'
-    DEFAULT_PERIODS = ["2000Q3", "2000Q4",
-                       "2001Q1", "2001Q2", "2001Q3", "2001Q4",
-                       "2002Q1", "2002Q2", "2002Q3", "2002Q4",
-                       "2003Q1", "2003Q2", "2003Q3", "2003Q4",
-                       "2004Q1", "2004Q2", "2004Q3", "2004Q4"]
-    # remember if you change DEFAULT_PERIODS to make sure you have updated
-    # every parameter as well
-    DEFAULT_START_PERIOD = DEFAULT_PERIODS[0]
-    DEFAULT_END_PERIOD = DEFAULT_PERIODS[-1]
-    DEFAULT_NUM_CUR_PERIODS = len(DEFAULT_PERIODS)
-    DEFAULT_NUM_FWD_PERIODS = 12
-    DEFAULT_NUM_PERIODS = DEFAULT_NUM_CUR_PERIODS + DEFAULT_NUM_FWD_PERIODS
 
-    def __init__(self, indices_filename=None):
-        if indices_filename is None:
+    def __init__(self, indices_dict=None):
+        # read in index values
+        if indices_dict is None:
             with open(self.DEFAULT_FILENAME) as f:
                 self.indices = json.load(f)
+        elif isinstance(indices_dict, dict):
+            self.indices = indices_dict
+        else:
+            raise ValueError('indices_dict must be None or a dictionary')
+
+        self.set_default_series_vals(use_api_data=True)
+
+    def set_default_series_vals(self, use_api_data=False):
+        """
+        Set as attributes the array of values for each parameter
+        """
+        if use_api_data:
+            index_df = self.get_api_data('cpi')
+            setattr(self, 'cpi_', index_df)
+        else:
+            if hasattr(self, 'indices'):
+                for index_name, data in self.indices.items():
+                    idx = pd.PeriodIndex(start=data['start_period'],
+                                         end=data['end_period'],
+                                         freq='Q')[::2]
+                    index_df = pd.DataFrame(data['values'],
+                                            index=idx,
+                                            columns=['values'])
+                    index_df['pct_change'] = round(index_df['values'].pct_change(), 4)
+                    setattr(self, index_name, index_df)
 
     @classmethod
     def get_api_data(self, series):
@@ -104,7 +118,12 @@ class Index(object):
 
 
 ind = Index()
-print(ind.urls)
-print(Index.get_api_data('cpi'))
-print(Index.get_api_data('cpi_change'))
-print(Index.get_api_data('cpi_change_'))
+print(ind.indices)
+print(dir(ind))
+# print(ind.cpi)
+# print(ind.mte)
+print(ind.cpi_)
+# print(ind.urls)
+# print(Index.get_api_data('cpi'))
+# print(Index.get_api_data('cpi_change'))
+# print(Index.get_api_data('cpi_change_'))
