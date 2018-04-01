@@ -47,12 +47,12 @@ class Parameters(object):
 
         # Initialise Index object to inflate parameters
         print('-----------')
-        ind = Index()
-        print(ind.indices)
-        print(ind.cpi)
-        print(ind.mte)
-        print(ind.param1)
-        print(ind.inflation)
+        self.ind = Index()
+        print(self.ind.indices)
+        print(self.ind.cpi)
+        print(self.ind.mte)
+        print(self.ind.param1)
+        print(self.ind.inflate)
         print('-----------')
 
 
@@ -108,6 +108,8 @@ class Parameters(object):
                 values = data['values']
                 column_names = data.get('columns', ['values'])
                 inflation_rates = data.get('index_method', None)
+                # inflation_series = getattr(self.ind, str(inflation_rates))
+                # print(inflation_series)
                 if len(values) != self._num_cur_periods:
                     msg = 'Incorrect number of parameter values specified ' \
                           'in the parameter: {}'
@@ -154,10 +156,16 @@ class Parameters(object):
         param = param.reindex(pd.PeriodIndex(start=self.current_period,
                                              periods=expanded_rows,
                                              freq='Q'))
+        print(self.ind)
+        print(self.current_period)
         for i in range(len(vals), expanded_rows):
             # TODO: need to inflate the parameters here
             # param.iloc[i] = inflate(param.iloc[i-1])
-            param.iloc[i] = param.iloc[i-1]
+
+            # take each row of the param data frame that is NaN and set its value
+            # use a copy because python uses call by reference
+            param.iloc[i] = self.ind.inflate(param.iloc[i-1].copy(), self.ind)
+
         return param
 
     def set_period(self, target_year, target_quarter):
@@ -299,19 +307,19 @@ class Parameters(object):
 
 p = Parameters()
 
-reform = p.read_reform_json('reform_params.json')
-print(reform)
-p.implement_reforms(reform)
+# reform = p.read_reform_json('reform_params.json')
+# print(reform)
+# p.implement_reforms(reform)
 
-print(type(p._start))
+# print(type(p._start))
 # print(p._end, p.end_period)
 # print(p._current_period, p.current_period)
-print(p._periods, p.periods)
+# print(p._periods, p.periods)
 # print(p.vals.keys())
 # print(dir(p))
 print(p._param_1)
-print(p.param_1)
+# print(p.param_1)
 print(p._param_2)
-print(p.param_2)
+# print(p.param_2)
 print(p._param_3)
-print(p.param_3)
+# print(p.param_3)

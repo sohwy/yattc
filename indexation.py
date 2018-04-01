@@ -13,7 +13,7 @@ data = {
         }
 
 df = pd.DataFrame(data['param1']['data'], columns=['x1', 'x2'])
-print(df)
+# print(df)
 class Indexation():
     def __init__(self):
         self.add = singledispatch(self.add)
@@ -100,19 +100,19 @@ class Indexation():
 
     c_mapper = {'col1': add_for_col1, 'col2': add_for_col2}
 
-a = pd.Series(range(3))
-b = {'col1':[1, 1, 1], 'col2': [2, 2, 2]}
-c = pd.DataFrame(data=b)
-print(a)
-print(c)
-z = [1, 2]
-y = [3, 4]
-ind = Indexation()
-print(ind.add(1, 2))
-print(ind.add(z, y))
-print(ind.add(a, 7))
-z = ind.add(c, 7)
-print(ind.inflate2(df))
+# a = pd.Series(range(3))
+# b = {'col1':[1, 1, 1], 'col2': [2, 2, 2]}
+# c = pd.DataFrame(data=b)
+# print(a)
+# print(c)
+# z = [1, 2]
+# y = [3, 4]
+# ind = Indexation()
+# print(ind.add(1, 2))
+# print(ind.add(z, y))
+# print(ind.add(a, 7))
+# z = ind.add(c, 7)
+# print(ind.inflate2(df))
  
 
 class Index(object):
@@ -194,46 +194,53 @@ class Index(object):
         for i in range(1, 5):
             series[i] = series[i-1] * (1 + pct_change[i])
 
-    def inflate(self, param):
-        print(self.param1)
+    def inflate(self, single_period_param, index_obj):
+
+        period = single_period_param.name
+        print(index_obj.cpi.loc[period])
+        print(index_obj.cpi.loc[period - 1])
 
         # inflation functions
         def x1_func(column):
             # can we access class and instance attributes here?
             # such as any indexation series
-            return param[column] * -10
+            return single_period_param[column] * -10
 
         def chained(column, rate):
-            return param[column] * rate
+            return single_period_param[column] * rate
 
         def cpi_inflate(column, series):
-            return param[column] * (1 + series)
+            return single_period_param[column] * (1 + index_obj.cpi.loc[period])
 
         func_mapper = {'x1_func': x1_func, 'chained': chained}
         # args_mapper = {'x2': ('x1', 0.5)}
 
-        for column in param.columns:
-            index_func_name = data['param1']['index'][column]
-            func = func_mapper[index_func_name]
+        # since the slice of the data frame gives us a pandas Series object
+        # the columns are now actually rows of the Series object
+
+        for column in single_period_param.index:
+            # index_func_name = data['param1']['index'][column]
+            # func = func_mapper[index_func_name]
             # args = args_mapper.get(column, (column,))
             # args = args_mapper[column]
-            args = data['param1']['chained_args'].get(column, (column,))
-            print('column:', column)
-            print('args:', args)
-            param[column] = func(*args)
-        return param
+            # args = data['param1']['chained_args'].get(column, (column,))
+            # print('column:', column)
+            # print('args:', args)
+            # param[column] = func(*args)
+            single_period_param.loc[column] += 0.99
+        return single_period_param
 
 
 # ind = Index(use_api_data=True)
-print('========')
-print('this is using Index class')
-print('========')
-ind = Index(use_api_data=False)
-print(ind.indices)
-print(dir(ind))
-print(ind.cpi.head())
-print(ind.mte.head())
-ind.inflate(param1)
+# print('========')
+# print('this is using Index class')
+# print('========')
+# ind = Index(use_api_data=False)
+# print(ind.indices)
+# print(dir(ind))
+# print(ind.cpi.head())
+# print(ind.mte.head())
+# ind.inflate(param1)
 
 # print(ind.urls)
 # print(Index.get_api_data('cpi'))
