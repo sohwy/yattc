@@ -55,7 +55,7 @@
 		"columns": ["col1", "col2"],
 		"freq": "quarterly",
 		"index_quarters": [2, 4],
-		"index_method": "cpi",
+		"index_method": {"col1": "cpi", "col2": "cpi"},
 		"int_value": true,
 		"bool_value": false,
 		"valid_values": {"min": -9e99, "max": 9e99}

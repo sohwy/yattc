@@ -7,6 +7,8 @@ import json
 import pandas as pd
 import numpy as np
 
+# yattc modules
+from indexation import Index
 
 class Parameters(object):
     """
@@ -27,7 +29,10 @@ class Parameters(object):
     DEFAULT_NUM_FWD_PERIODS = 12
     DEFAULT_NUM_PERIODS = DEFAULT_NUM_CUR_PERIODS + DEFAULT_NUM_FWD_PERIODS
 
-    def __init__(self, parameter_dict=None, periods=DEFAULT_PERIODS,
+    def __init__(self,
+                 parameter_dict=None,
+                 indices_dict=None,
+                 periods=DEFAULT_PERIODS,
                  num_fwd_periods=DEFAULT_NUM_FWD_PERIODS):
         self._num_cur_periods = len(periods)
         self._num_fwd_periods = num_fwd_periods
@@ -39,6 +44,17 @@ class Parameters(object):
         self._start = self._periods.index[0]
         self._end = self._periods.index[-1]
         self._current_period = self._start
+
+        # Initialise Index object to inflate parameters
+        print('-----------')
+        ind = Index()
+        print(ind.indices)
+        print(ind.cpi)
+        print(ind.mte)
+        print(ind.param1)
+        print(ind.inflation)
+        print('-----------')
+
 
         # Read in parameters
         if parameter_dict is None:
@@ -139,6 +155,8 @@ class Parameters(object):
                                              periods=expanded_rows,
                                              freq='Q'))
         for i in range(len(vals), expanded_rows):
+            # TODO: need to inflate the parameters here
+            # param.iloc[i] = inflate(param.iloc[i-1])
             param.iloc[i] = param.iloc[i-1]
         return param
 

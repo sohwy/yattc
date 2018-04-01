@@ -8,10 +8,10 @@
 		"series_id": "",
 		"series_name": "",
 		"notes": "",
-		"values": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+		"values": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		"start_period": "2000Q3",
 		"end_period": "2007Q4",
-		"freq": "biannual",
+		"freq": 4,
 		"index_quarters": [2, 4]
 	},
 
@@ -27,7 +27,7 @@
 		"values": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		"start_period": "2000Q3",
 		"end_period": "2007Q4",
-		"freq": "biannual",
+		"freq": 2,
 		"index_quarters": [2, 4]
 	}
 }
