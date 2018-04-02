@@ -230,6 +230,16 @@ class Index(object):
             single_period_param.loc[column] += 0.99
         return single_period_param
 
+    def inflate_single_column(self, row_col_param, index_obj, index_method, index_args):
+        def cpi_inflate(value):
+            return value * (1 + rate) 
+
+        def chained_param(column, rate):
+            return 1
+
+        row_col_param += 0.99
+        return row_col_param
+
 
 # ind = Index(use_api_data=True)
 # print('========')

@@ -48,10 +48,8 @@ class Parameters(object):
         # Initialise Index object to inflate parameters
         print('-----------')
         self.ind = Index()
-        print(self.ind.indices)
-        print(self.ind.cpi)
+        print(self.ind.cpi['pct_change'])
         print(self.ind.mte)
-        print(self.ind.param1)
         print(self.ind.inflate)
         print('-----------')
 
@@ -107,7 +105,9 @@ class Parameters(object):
                 print(param, data)
                 values = data['values']
                 column_names = data.get('columns', ['values'])
-                inflation_rates = data.get('index_method', None)
+                inflation_method = data.get('index_method', None)
+                inflation_args = data.get('index_args', None)
+
                 # inflation_series = getattr(self.ind, str(inflation_rates))
                 # print(inflation_series)
                 if len(values) != self._num_cur_periods:
@@ -115,13 +115,14 @@ class Parameters(object):
                           'in the parameter: {}'
                     raise ValueError(msg.format(param))
                 setattr(self, param, self.expand_array(values,
-                                                       inflation_rates,
+                                                       inflation_method,
+                                                       inflation_args,
                                                        column_names,
                                                        self._num_periods))
             self.set_period(self.current_period.year,
                             self.current_period.quarter)
 
-    def expand_array(self, vals, inflation_rates, cols, expanded_rows):
+    def expand_array(self, vals, inflation_rates, inflation_args, cols, expanded_rows):
         """
         Expand the given parameter vector to cover the forward period and
         inflate the parameter values
@@ -158,13 +159,74 @@ class Parameters(object):
                                              freq='Q'))
         print(self.ind)
         print(self.current_period)
-        for i in range(len(vals), expanded_rows):
+        print(inflation_rates)
+
+
+
+        def inflate_param(param, index_method, index_args):
+
+            def cpi_inflate(*args):
+                return param.loc[period - 1, column] * (1 + self.ind.cpi['pct_change'][period])
+
+            def chained_inflate(chained_to_param, rate):
+                return param.loc[period, chained_to_param] * rate
+
+            func_mapper = {'cpi': cpi_inflate, 'chained': chained_inflate}
+
+            # here we are dealing with one ROW of the parameter data frame
+            for i in range(len(vals), expanded_rows):
+                # current_params_row = param.iloc[i]
+                # period = current_params_row.name
+                period = param.iloc[i].name
+
+                # here we are dealing with one COLUMN for the ROW of the parameter data frame
+                # we inflate each of these [row, col] values individually
+                # for column in current_params_row.index:
+                for column in param.loc[period].index:
+                    # first we must get the function that is to be used
+                    # we use the index_method argument, which should be a dictionary
+                    # eg. index_method = {'x1': 'cpi', 'x2': 'chained'}
+                    if isinstance(index_method, str):
+                        func_name = index_method
+                    elif isinstance(index_method, dict):
+                        func_name = index_method.get(column, None)
+                    else:
+                        raise ValueError('index_method must be str or dict')
+                    if index_args:
+                        args = index_args.get(column, dict())
+                    else:
+                        args = dict()
+                    print(func_name)
+                    # if the parameter is actually inflated...
+                    if func_name is not None:
+                        func = func_mapper[func_name]
+
+                        # second we must get the arguments that go into func
+                        # args = index_args.get(column, None)
+
+                        # third we calculate the new value
+                        param.loc[period, column] = func(*args)
+                        # current_params_row.loc[column] = 0
+                    else:
+                        # set the value of the column to be the value from the previous row
+                        # current_params_row.loc[column] = param.loc[period - 1, column]
+                        param.loc[period, column] = param.loc[period - 1, column]
+            return param
+
+        param = inflate_param(param.copy(), inflation_rates, inflation_args)
+        # for i in range(len(vals), expanded_rows):
             # TODO: need to inflate the parameters here
             # param.iloc[i] = inflate(param.iloc[i-1])
 
             # take each row of the param data frame that is NaN and set its value
             # use a copy because python uses call by reference
-            param.iloc[i] = self.ind.inflate(param.iloc[i-1].copy(), self.ind)
+
+            # iterate over each row in param and column in row of param
+            # row = param.index[i]
+            # for col in param.loc[row].index:
+                # param.loc[row, col] = self.ind.inflate_single_column(param.loc[row-1, col].copy(), self.ind, None, None)
+
+            # param.iloc[i] = self.ind.inflate(param.iloc[i-1].copy(), self.ind)
 
         return param
 
@@ -263,12 +325,13 @@ class Parameters(object):
             if not isinstance(values, list):
                 raise ValueError('Parameter values must be a list')
             inflation_rates = self.vals.get('index_method')
+            inflation_args = self.vals.get('index_args')
             # idx = pd.PeriodIndex(start=self.current_period,
             #                      periods=len(values),
             #                      freq='Q')
             column_names = self.vals[param].get('columns', ['values'])
             current_vals = getattr(self, param, None)
-            new_vals = self.expand_array(values, inflation_rates,
+            new_vals = self.expand_array(values, inflation_rates, inflation_args,
                                          column_names, expanded_dim)
             current_vals[self.periods.loc[period]:] = new_vals
 
@@ -317,9 +380,12 @@ p = Parameters()
 # print(p._periods, p.periods)
 # print(p.vals.keys())
 # print(dir(p))
+print('======this is param1======')
 print(p._param_1)
-# print(p.param_1)
+print(p.param_1)
+print('======this is param2======')
 print(p._param_2)
-# print(p.param_2)
+print(p.param_2)
+print('======this is param3======')
 print(p._param_3)
-# print(p.param_3)
+print(p.param_3)
