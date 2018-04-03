@@ -107,6 +107,7 @@ class Parameters(object):
                 column_names = data.get('columns', ['values'])
                 index_method = data.get('index_method', dict())
                 index_args = data.get('index_args', dict())
+                index_qtrs = data.get('index_quarters', None)
                 if len(values) != self._num_cur_periods:
                     msg = 'Incorrect number of parameter values specified ' \
                           'in the parameter: {}'
@@ -114,13 +115,16 @@ class Parameters(object):
                 setattr(self, param, self.expand_array(values,
                                                        index_method,
                                                        index_args,
+                                                       index_qtrs,
                                                        column_names,
                                                        self._num_periods))
             self.set_period(self.current_period.year,
                             self.current_period.quarter)
 
-    def expand_array(self, vals, inflation_rates, inflation_args,
+    def expand_array(self, vals, index_method, index_args, index_qtrs,
                      cols, expanded_rows):
+    # def expand_array(self, vals, inflation_rates, inflation_args,
+                     # inflation_qtrs, cols, expanded_rows):
         """
         Expand the given parameter vector to cover the forward period and
         inflate the parameter values
@@ -146,6 +150,9 @@ class Parameters(object):
 
         (2)
             Set the data type for the pandas array
+
+        (3)
+            Index only the relevant periods
         """
         param = pd.DataFrame(vals,
                              index=pd.PeriodIndex(start=self.current_period,
@@ -156,7 +163,8 @@ class Parameters(object):
                                              periods=expanded_rows,
                                              freq='Q'))
 
-        def inflate_param(param, index_method, index_args):
+        def inflate_param(param):
+        # def inflate_param(param, index_method, index_args):
             """
             Function only called in expand_array method to inflate
             the parameter data frame
@@ -186,6 +194,10 @@ class Parameters(object):
             for i in range(len(vals), expanded_rows):
                 period = param.iloc[i].name
                 for column in param.loc[period].index:
+                    # if isinstance(inflation_rates, str):
+                    #     func_name = inflation_rates
+                    # elif isinstance(inflation_rates, dict):
+                    #     func_name = inflation_rates.get(column, None)
                     if isinstance(index_method, str):
                         func_name = index_method
                     elif isinstance(index_method, dict):
@@ -193,10 +205,12 @@ class Parameters(object):
                     else:
                         raise ValueError('index_method must be str or dict')
                     # if index_args:
+                    # args = inflation_args.get(column, ())
                     args = index_args.get(column, ())
                     # else:
                     #     args = ()
-                    if func_name is not None:
+                    if func_name and period.quarter in index_qtrs:
+                    # if func_name and period.quarter in inflation_qtrs:
                         func = func_mapper[func_name]
                         param.loc[period, column] = func(*args)
                     else:
@@ -204,7 +218,8 @@ class Parameters(object):
                                 param.loc[period - 1, column]
             return param
 
-        param = inflate_param(param.copy(), inflation_rates, inflation_args)
+        param = inflate_param(param.copy())
+        # param = inflate_param(param.copy(), inflation_rates, inflation_args)
 
         return param
 
@@ -304,10 +319,11 @@ class Parameters(object):
                 raise ValueError('Parameter values must be a list')
             index_rates = self.vals[param].get('index_method', dict())
             index_args = self.vals[param].get('index_args', dict())
+            index_qtrs = self.vals[param].get('index_quarters', None)
             column_names = self.vals[param].get('columns', ['values'])
             current_vals = getattr(self, param, None)
             new_vals = self.expand_array(values, index_rates, index_args,
-                                         column_names, expanded_dim)
+                                         index_qtrs, column_names, expanded_dim)
             current_vals[self.periods.loc[period]:] = new_vals
 
     def read_reform_json(self, reform_json):
@@ -346,7 +362,7 @@ class Parameters(object):
 p = Parameters()
 
 reform = p.read_reform_json('reform_params.json')
-# print(reform)
+print(reform)
 p.implement_reforms(reform)
 
 # print(type(p._start))
