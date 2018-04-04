@@ -1,4 +1,3 @@
-
 """
 Parameters class
 """
@@ -9,6 +8,7 @@ import numpy as np
 
 # yattc modules
 from indexation import Index
+
 
 class Parameters(object):
     """
@@ -46,13 +46,7 @@ class Parameters(object):
         self._current_period = self._start
 
         # Initialise Index object to inflate parameters
-        print('-----------')
         self.ind = Index()
-        print(self.ind.cpi['pct_change'])
-        print(self.ind.mte)
-        print(self.ind.inflate)
-        print('-----------')
-
 
         # Read in parameters
         if parameter_dict is None:
@@ -375,11 +369,11 @@ class Parameters(object):
 
 
 
-p = Parameters()
-
-reform = p.read_reform_json('reform_params.json')
-print(reform)
-p.implement_reforms(reform)
+# p = Parameters()
+# 
+# reform = p.read_reform_json('reform_params.json')
+# print(reform)
+# p.implement_reforms(reform)
 
 # print(type(p._start))
 # print(p._end, p.end_period)
@@ -387,12 +381,12 @@ p.implement_reforms(reform)
 # print(p._periods, p.periods)
 # print(p.vals.keys())
 # print(dir(p))
-print('======this is param1======')
-print(p._param_1)
-print(p.param_1)
-print('======this is param2======')
-print(p._param_2)
-print(p.param_2)
-print('======this is param3======')
-print(p._param_3)
-print(p.param_3)
+# print('======this is param1======')
+# print(p._param_1)
+# print(p.param_1)
+# print('======this is param2======')
+# print(p._param_2)
+# print(p.param_2)
+# print('======this is param3======')
+# print(p._param_3)
+# print(p.param_3)
