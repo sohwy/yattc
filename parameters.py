@@ -369,11 +369,11 @@ class Parameters(object):
 
 
 
-# p = Parameters()
-# 
-# reform = p.read_reform_json('reform_params.json')
-# print(reform)
-# p.implement_reforms(reform)
+p = Parameters()
+
+reform = p.read_reform_json('reform_params.json')
+print(reform)
+p.implement_reforms(reform)
 
 # print(type(p._start))
 # print(p._end, p.end_period)
@@ -381,12 +381,12 @@ class Parameters(object):
 # print(p._periods, p.periods)
 # print(p.vals.keys())
 # print(dir(p))
-# print('======this is param1======')
-# print(p._param_1)
-# print(p.param_1)
-# print('======this is param2======')
-# print(p._param_2)
-# print(p.param_2)
-# print('======this is param3======')
-# print(p._param_3)
-# print(p.param_3)
+print('======this is param1======')
+print(p._param_1)
+print(p.param_1)
+print('======this is param2======')
+print(p._param_2)
+print(p.param_2)
+print('======this is param3======')
+print(p._param_3)
+print(p.param_3)
