@@ -9,7 +9,8 @@
 		"freq": "quarterly",
 		"index_quarters": [1, 3],
 		"index_method": "cpi",
-		"int_value": true,
+		"int_value": false,
+		"type": "float64",
 		"bool_value": false,
 		"valid_values": {"min": -9e99, "max": 9e99}
 	},
@@ -25,6 +26,7 @@
 		"index_quarters": [2, 4],
 		"index_method": "cpi",
 		"int_value": false,
+		"type": "int8",
 		"bool_value": false,
 		"valid_values": {"min": -9e99, "max": 9e99}
 	},
@@ -57,7 +59,8 @@
 		"index_quarters": [2, 4],
 		"index_method": {"col1": null, "col2": "cpi", "col3": "chained"},
 		"index_args": {"col3": ["col2", 0.5]},
-		"int_value": true,
+		"int_value": false,
+		"type": "float64",
 		"bool_value": false,
 		"valid_values": {"min": -9e99, "max": 9e99}
 	}

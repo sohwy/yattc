@@ -14,10 +14,6 @@ class Index(object):
     DEFAULT_FILENAME = 'index_series.json'
 
     def __init__(self, indices_dict=None, use_api_data=False):
-
-
-        # some parameters just for testing
-        self.param1 = pd.DataFrame(np.ones(30), index=pd.PeriodIndex(start='2000Q3', end='2007Q4', freq='Q'), columns=['x1'])
         # read in index values
         if indices_dict is None:
             with open(self.DEFAULT_FILENAME) as f:
@@ -26,7 +22,7 @@ class Index(object):
             self.indices = indices_dict
         else:
             raise ValueError('indices_dict must be None or a dictionary')
-
+        # set index series data
         self.set_default_series_vals(use_api_data)
 
     def set_default_series_vals(self, use_api_data=False):
@@ -46,7 +42,10 @@ class Index(object):
                     index_df = pd.DataFrame(data['values'],
                                             index=idx,
                                             columns=['values'])
-                    index_df['pct_change'] = round(index_df['values'].pct_change(), 4)
+                    # calculate percentage change
+                    index_df['pct_change'] = \
+                        round(index_df['values'].pct_change(), 4)
+                    # assign values to attribute of Index object
                     setattr(self, index_name, index_df)
 
     @classmethod
@@ -78,56 +77,6 @@ class Index(object):
         except requests.exceptions.HTTPError as err:
             print('Bad url: {}'.format(err))
             raise
-
-    def simple_inflate(self, series, pct_change):
-        for i in range(1, 5):
-            series[i] = series[i-1] * (1 + pct_change[i])
-
-    def inflate(self, single_period_param, index_obj):
-
-        period = single_period_param.name
-        print(index_obj.cpi.loc[period])
-        print(index_obj.cpi.loc[period - 1])
-
-        # inflation functions
-        def x1_func(column):
-            # can we access class and instance attributes here?
-            # such as any indexation series
-            return single_period_param[column] * -10
-
-        def chained(column, rate):
-            return single_period_param[column] * rate
-
-        def cpi_inflate(column, series):
-            return single_period_param[column] * (1 + index_obj.cpi.loc[period])
-
-        func_mapper = {'x1_func': x1_func, 'chained': chained}
-        # args_mapper = {'x2': ('x1', 0.5)}
-
-        # since the slice of the data frame gives us a pandas Series object
-        # the columns are now actually rows of the Series object
-
-        for column in single_period_param.index:
-            # index_func_name = data['param1']['index'][column]
-            # func = func_mapper[index_func_name]
-            # args = args_mapper.get(column, (column,))
-            # args = args_mapper[column]
-            # args = data['param1']['chained_args'].get(column, (column,))
-            # print('column:', column)
-            # print('args:', args)
-            # param[column] = func(*args)
-            single_period_param.loc[column] += 0.99
-        return single_period_param
-
-    def inflate_single_column(self, row_col_param, index_obj, index_method, index_args):
-        def cpi_inflate(value):
-            return value * (1 + rate) 
-
-        def chained_param(column, rate):
-            return 1
-
-        row_col_param += 0.99
-        return row_col_param
 
 
 # ind = Index(use_api_data=True)

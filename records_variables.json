@@ -1,0 +1,43 @@
+{
+	"meta": {
+		"variable_name": {
+			"type": "numpy data type",
+			"desc": "description of the variable",
+			"notes": "notes about the variable"
+		}
+	},
+
+	"read": {
+		"variable1": {
+			"type": "object",
+			"desc": "the description of variable1",
+			"notes": "some notes here"
+		},
+
+		"variable2": {
+			"type": "object",
+			"desc": "the description of variable2",
+			"notes": ""
+		},
+		
+		"variable3": {
+			"type": "float64",
+			"desc": "the description of variable2",
+			"notes": ""
+		}
+	},
+
+	"calc": {
+		"variable3": {
+			"type": "int8",
+			"desc": "the description of variable3",
+			"notes": "some notes here"
+		},
+
+		"variable4": {
+			"type": "float64",
+			"desc": "the description of variable4",
+			"notes": ""
+		}
+	}	
+}
