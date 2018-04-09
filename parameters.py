@@ -15,7 +15,7 @@ class Parameters(object):
     Parameters class
     """
 
-    DEFAULT_FILENAME = 'test_params.json'
+    DEFAULT_FILENAME = 'some_params.json'
     DEFAULT_PERIODS = ["2000Q3", "2000Q4",
                        "2001Q1", "2001Q2", "2001Q3", "2001Q4",
                        "2002Q1", "2002Q2", "2002Q3", "2002Q4",
@@ -115,8 +115,9 @@ class Parameters(object):
                                                        data_type,
                                                        column_names,
                                                        self._num_periods))
-            self.set_period(self.current_period.year,
-                            self.current_period.quarter)
+            # self.set_period(self.current_period.year,
+            #                 self.current_period.quarter)
+            self.set_period(self.current_period)
 
     def expand_array(self, vals, index_method, index_args, index_qtrs,
                      data_type, cols, expanded_rows):
@@ -225,7 +226,8 @@ class Parameters(object):
 
         return param
 
-    def set_period(self, target_year, target_quarter):
+    # def set_period(self, target_year, target_quarter):
+    def set_period(self, target_period):
         """
         Set as attributes the values of each parameter for the current period
 
@@ -244,7 +246,8 @@ class Parameters(object):
             The attribute being set is the parameter name without the leading
             underscore.
         """
-        period = pd.Period(year=target_year, quarter=target_quarter, freq='Q')
+        period = pd.Period(target_period, freq='Q')
+        # period = pd.Period(year=target_year, quarter=target_quarter, freq='Q')
         # check that period is within valid range
         if period < self.start_period or period > self.end_period:
             raise ValueError('Parameter period must be '
@@ -302,8 +305,9 @@ class Parameters(object):
         for period in reform_periods:
             self._current_period = pd.Period(period, freq='Q')
             self.update_parameter(period, reform[period])
-        self.set_period(precall_current_period.year,
-                        precall_current_period.quarter)
+        # self.set_period(precall_current_period.year,
+        #                 precall_current_period.quarter)
+        self.set_period(precall_current_period)
 
     def update_parameter(self, period, param_val_dict):
         """
@@ -384,5 +388,7 @@ print(p.param_2)
 print('======this is param3======')
 print(p._param_3)
 print(p.param_3)
-
-print(type(p.current_period))
+p.set_period('2005Q4')
+print(p.param_1)
+print(p.param_2)
+print(p.param_3)

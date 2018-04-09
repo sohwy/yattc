@@ -11,10 +11,10 @@ import io
 # import yattc modules
 from records import Records
 from parameters import Parameters
-
+import policy
 
 class Calculator(object):
-    def __init__(self, records=None, parameters=None, policy=None):
+    def __init__(self, records=None, parameters=None):
         # initialise embedded Records object
         if records is None:
             self.records = Records()
@@ -31,6 +31,9 @@ class Calculator(object):
         else:
             raise ValueError('parameters must be None or a Parameters object')
         # TODO: initialise Policy object
+        self.set_period('2007Q1')
+        z = policy.simple_func(self.var('variable1'), self.param('param_1'))
+        print(z)
 
     def index_series(self, series):
         """
@@ -67,7 +70,13 @@ class Calculator(object):
         """
         return value.shape, value.dtype, value.index, type(value)
 
-    def param(self, parameter, parameter_value=None):
+    def param(self, parameter):
+        return getattr(self.parameters, parameter).values
+
+    def var(self, variable):
+        return getattr(self.records, variable).values
+
+    def param_(self, parameter, parameter_value=None):
         """
         Return named parameter from embedded Parameters object or change the
         value of the parameter in the embedded Parameters object.
@@ -78,9 +87,6 @@ class Calculator(object):
         parameter value. No indexation is applied to subsequent periods.
         """
 
-        err_msg = 'attributes of new parameter values for {} do not match ' \
-                  'current value attributes'
-
         # no parameter value passed in, return current value
         if parameter_value is None:
             return getattr(self.parameters, parameter)
@@ -88,19 +94,18 @@ class Calculator(object):
         elif not isinstance(parameter_value, pd.Series) or \
             self.get_value_attrs(parameter_value) != \
                 self.get_value_attrs(getattr(self.parameters, parameter)):
+            err_msg = 'attributes of new parameter values for {} do not ' \
+                      'match current value attributes'
             raise ValueError(err_msg.format(parameter))
         # attributes match, change parameter value
         else:
             setattr(self.parameters, parameter, parameter_value)
 
-    def var(self, variable, variable_value=None):
+    def var_(self, variable, variable_value=None):
         """
         Return named variable from embedded Records object or change the
         value of the variable in the embedded Records object.
         """
-
-        err_msg = 'attributes of new variable values for {} do not match ' \
-                  'current value attributes'
 
         # no parameter value passed in, return current value
         if variable_value is None:
@@ -109,25 +114,29 @@ class Calculator(object):
         elif not isinstance(variable_value, pd.Series) or \
             self.get_value_attrs(variable_value) != \
                 self.get_value_attrs(getattr(self.records, variable)):
+            err_msg = 'attributes of new parameter values for {} do not ' \
+                      'match current value attributes'
             raise ValueError(err_msg.format(variable))
         # attributes match, change variable value
         else:
             setattr(self.records, variable, variable_value)
 
+    def set_period(self, target_period):
+        """
+        Set period of embedded Records and Parameters objects
+        """
+        period = pd.Period(target_period, freq='Q')
+        self.parameters.set_period(period)
+        # TODO: include Records set_period method
 
 
-data = 'variable1,variable2,variable3\na,b,1\na,b,2\nc,d,3'
-z = pd.read_csv(io.StringIO(data))
-recs = Records(records=z)
-calc = Calculator(records=recs)
+
+# data = 'variable1,variable2,variable3\na,b,1\na,b,2\nc,d,3'
+# z = pd.read_csv(io.StringIO(data))
+# recs = Records(records=z)
+calc = Calculator(records=Records(), parameters=Parameters())
 print(calc.records)
 print(calc.parameters)
 
 print(calc.param('param_1'))
-calc.param('param_1', 1 + calc.parameters.param_1)
-print(calc.param('param_1'))
-# calc.param('param_1', 10)
 print(calc.var('variable3'))
-calc.var('variable3', 1 + calc.records.variable3)
-print(calc.var('variable3'))
-# calc.var('variable1', 'a')

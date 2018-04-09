@@ -11,7 +11,9 @@ import os
 
 class Records(object):
 
-    DEFAULT_FILENAME = 'records.csv'
+    CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+    print(CURRENT_PATH)
+    DEFAULT_FILENAME = 'some_data.dat'
     DEFAULT_START_PERIOD = '2000Q3'
     DEFAULT_END_PERIOD = '2018Q2'
     DEFAULT_METADATA = 'records_variables.json'
@@ -33,11 +35,15 @@ class Records(object):
         attribute of the Records object
         """
         # read in records data either from data frame or flat file
-        if isinstance(data, pd.DataFrame):
+        if data is None:
+            records_data = pd.read_table(self.DEFAULT_FILENAME)
+        elif isinstance(data, pd.DataFrame):
             records_data = data
         elif isinstance(data, str):
             if os.path.isfile(data):
-                records_data = pd.read_csv(data)
+                records_data = pd.read_table(data)
+            else:
+                raise ValueError('invalid data file path')
         else:
             raise ValueError('rec_data must be a data frame or a flat file')
         # set attributes of Records object
@@ -52,10 +58,18 @@ class Records(object):
         if metadata is None:
             with open(self.DEFAULT_METADATA) as f:
                 self.rec_metadata = json.load(f)
+        elif isinstance(metadata, str):
+            try:
+                with open(metadata) as f:
+                    self.rec_metadata = json.load(f)
+            except json.decoder.JSONDecodeError:
+                print('metadata {} contains invalid JSON'.format(metadata))
+                raise
         elif isinstance(metadata, dict):
             self.rec_metadata = metadata
         else:
-            raise ValueError('rec_metadata is not None or dict')
+            raise ValueError('rec_metadata is not None, valid JSON file, '
+                             'nor dict')
 
     @property
     def start_period(self):
@@ -82,11 +96,12 @@ class Records(object):
         self._current_period += 1
 
 
-data = 'variable1,variable2,variable3\na,b,1\na,b,2\nc,d,3'
+# data = 'variable1,variable2,variable3\na,b,1\na,b,2\nc,d,3'
 print('-----')
-z = pd.read_csv(io.StringIO(data))
-print(z)
-recs = Records(records=z)
+# z = pd.read_csv(io.StringIO(data))
+# print(z)
+# recs = Records(records=None, records_metadata=None)
+recs = Records()
 print(recs.start_period)
 print(recs.current_period)
 recs.increment_period()

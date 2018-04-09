@@ -15,7 +15,7 @@
 		},
 
 		"variable2": {
-			"type": "object",
+			"type": "int8",
 			"desc": "the description of variable2",
 			"notes": ""
 		},
