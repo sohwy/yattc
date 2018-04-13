@@ -15,18 +15,18 @@ class Parameters(object):
     Parameters class
     """
 
-    DEFAULT_FILENAME = 'some_params.json'
-    DEFAULT_PERIODS = ["2000Q3", "2000Q4",
-                       "2001Q1", "2001Q2", "2001Q3", "2001Q4",
-                       "2002Q1", "2002Q2", "2002Q3", "2002Q4",
-                       "2003Q1", "2003Q2", "2003Q3", "2003Q4",
-                       "2004Q1", "2004Q2", "2004Q3", "2004Q4"]
+    DEFAULT_FILENAME = 'current_parameters.json'
+    DEFAULT_PERIODS = ["2013Q3", "2013Q4",
+                       "2014Q1", "2014Q2", "2014Q3", "2014Q4",
+                       "2015Q1", "2015Q2", "2015Q3", "2015Q4",
+                       "2016Q1", "2016Q2", "2016Q3", "2016Q4",
+                       "2017Q1", "2017Q2", "2017Q3", "2017Q4"]
     # remember if you change DEFAULT_PERIODS to make sure you have updated
     # every parameter as well
     DEFAULT_START_PERIOD = DEFAULT_PERIODS[0]
     DEFAULT_END_PERIOD = DEFAULT_PERIODS[-1]
     DEFAULT_NUM_CUR_PERIODS = len(DEFAULT_PERIODS)
-    DEFAULT_NUM_FWD_PERIODS = 12
+    DEFAULT_NUM_FWD_PERIODS = 2
     DEFAULT_NUM_PERIODS = DEFAULT_NUM_CUR_PERIODS + DEFAULT_NUM_FWD_PERIODS
 
     def __init__(self,
@@ -58,6 +58,10 @@ class Parameters(object):
             raise ValueError('parameter_dict must be None or a dictionary')
 
         # Set default parameter values after padding and inflating known values
+        if not np.all(self.ind.final_periods >= self.end_period):
+            raise ValueError('Index series shorter than number of specified '
+                             + 'periods {}'.format(self.ind.final_periods
+                                                   - self.end_period))
         self.set_default_parameter_vals()
 
     @property
@@ -388,7 +392,11 @@ print(p.param_2)
 print('======this is param3======')
 print(p._param_3)
 print(p.param_3)
-p.set_period('2005Q4')
-print(p.param_1)
-print(p.param_2)
-print(p.param_3)
+# p.set_period('2005Q4')
+# print(p.param_1)
+# print(p.param_2)
+# print(p.param_3)
+# print(p.vals)
+print('======this is ra max rate======')
+print(p._ra_max_rate)
+print(p.ra_max_rate)

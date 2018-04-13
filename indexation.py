@@ -24,6 +24,11 @@ class Index(object):
             raise ValueError('indices_dict must be None or a dictionary')
         # set index series data
         self.set_default_series_vals(use_api_data)
+        # array of final periods to check parameters and index series values
+        # are properly aligned when an Index class is instantiated by
+        # the Parameters class
+        self.final_periods = np.array((self.cpi.index[-1],
+                                       self.mte.index[-1]))
 
     def set_default_series_vals(self, use_api_data=False):
         """
@@ -39,6 +44,9 @@ class Index(object):
                     idx = pd.PeriodIndex(start=data['start_period'],
                                          end=data['end_period'],
                                          freq='Q')[::int(4 / data['freq'])]
+                    # TODO: properly catch mismatched period index and
+                    # value length
+                    assert len(idx) == len(data['values'])
                     index_df = pd.DataFrame(data['values'],
                                             index=idx,
                                             columns=['values'])
@@ -83,13 +91,14 @@ class Index(object):
 # print('========')
 # print('this is using Index class')
 # print('========')
-# ind = Index(use_api_data=False)
-# print(ind.indices)
+ind = Index(use_api_data=False)
+print(ind.indices)
 # print(dir(ind))
-# print(ind.cpi.head())
-# print(ind.mte.head())
-# ind.inflate(param1)
+print(ind.cpi)
+print(ind.mte)
+print(ind.final_periods)
 
+# print(len(ind.cpi))
 # print(ind.urls)
 # print(Index.get_api_data('cpi'))
 # print(Index.get_api_data('cpi_change'))
