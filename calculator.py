@@ -31,7 +31,7 @@ class Calculator(object):
         else:
             raise ValueError('parameters must be None or a Parameters object')
         # TODO: initialise Policy object
-        self.set_period('2007Q1')
+        self.set_period('2017Q1')
         z = policy.simple_func(self.var('variable1'), self.param('param_1'))
         print(z)
 
@@ -140,3 +140,5 @@ print(calc.parameters)
 
 print(calc.param('param_1'))
 print(calc.var('variable3'))
+print(calc.param('ra_max_rate'))
+print(calc.parameters._ra_max_rate)
