@@ -6,21 +6,37 @@ import pandas as pd
 import numpy as np
 from numba import jit, prange, vectorize, int8, float64
 
+# create dummy data
 size = 10**4
-
 ftype = np.random.randint(0, 2, size, dtype=np.int8)
 kids = np.random.randint(0, 3, size, dtype=np.int8)
 rent = np.random.choice([0.0, 100, 150, 200, 250, 300, 350, 400], size)
-sharer = np.full(size, True, dtype=bool)
+sharer = np.full(size, False, dtype=bool)
+ra_prop = np.array(0.75)
+min_rent_thd = np.array([117.80, 191.00, 154.84, 229.18, 154.84, 229.18], dtype=np.float64)
+max_ra_rate = np.array([132.2, 124.6, 155.26, 155.26, 175.42, 175.42], dtype=np.float64)
 
+# get family type for rent assistance purposes
+# 0 = single, 1 = couple, 2 = single (1-2), 3 = single (3+)
+# 4 = couple(1-2), 5 = couple (3+)
+
+class RentAssistance(object):
+    def __init__(self, period):
+        pass
+
+
+
+# numpy implementation
 def get_ra_ftype_np(fam_type, ftb_kids):
     return fam_type + 2 * ftb_kids
 
+# vectorized
 @vectorize([int8(int8, int8)])
 def get_ra_ftype_vec(fam_type, ftb_kids):
     ftype_ra = fam_type + 2 * ftb_kids
     return ftype_ra
 
+# jitted
 @jit()
 def get_ra_ftype_jit(fam_type, ftb_kids):
     ftype_ra = np.zeros_like(fam_type)
@@ -33,23 +49,13 @@ z_vec = get_ra_ftype_vec(ftype, kids)
 z_jit = get_ra_ftype_jit(ftype, kids)
 print(np.allclose(z_vec, z_jit))
 print(np.allclose(z_np, z_jit))
-# In [3]: %timeit ra.get_ra_ftype_np(ra.ftype, ra.kids)
-# 73.3 µs ± 1.85 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-# 
-# In [4]: %timeit ra.get_ra_ftype_jit(ra.ftype, ra.kids)
-# 30.6 µs ± 1.32 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-# 
-# In [5]: %timeit ra.get_ra_ftype_vec(ra.ftype, ra.kids)
-# 25.1 µs ± 203 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
 
-ra_prop = np.array(0.75)
-min_rent_thd = np.array([117.80, 191.00, 154.84, 229.18, 154.84, 229.18], dtype=np.float64)
-max_ra_rate = np.array([132.2, 124.6, 155.26, 155.26, 175.42, 175.42], dtype=np.float64)
 
 
 # this can be jitted
+@jit()
 def bar(ftype_ra, min_rent_thd, max_ra_rate, ra_prop, rent, sharer):
     ans = np.zeros_like(rent)
     # get row stuff
@@ -74,5 +80,5 @@ print(max_ra_rate)
 print(rent)
 print(sharer)
 
-df = pd.DataFrame([z_vec, rent, sharer, rent_ass]).T
-print(df)
+# df = pd.DataFrame([z_vec, rent, sharer, rent_ass]).T
+# print(df)
