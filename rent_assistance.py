@@ -2,12 +2,180 @@
 Rent assistance class
 """
 
-import pandas as pd
 import numpy as np
-from numba import jit, prange, vectorize, int8, float64
+import time
+from base_policy import BasePolicy
+from numba import jit
 
-# create dummy data
-size = 10**4
+
+class RentAssistance(BasePolicy):
+
+    @staticmethod
+    def factory(period):
+        if period == '2013Q3':
+            return RentAssistance2013Q3()
+        elif period in BasePolicy.DEFAULT_PERIODS:
+            return RentAssistanceDefault()
+        else:
+            raise ValueError('Invalid value for period: {}'.format(period))
+
+    @staticmethod
+    @jit(nopython=True)
+    def calc_rent_assistance2(ftype, ftb_kids, rent, sharer, min_rent_thd,
+                             max_ra_rate, ra_prop):
+        """
+        Calculate rent assistance payable
+
+        ftype: family type
+        ftb_kids: number of ftb kids
+        rent: fortnightly rent paid
+        sharer: whether sharer
+        min_rent_thd: minimum rent threshold parameter
+        max_ra_rate: maximum rent assistance payable parameter
+        ra_prop: proportion of rent paid parameter
+
+        returns
+        ra_amt: amount of rent assistance payable
+        """
+        ra_amt = np.zeros_like(rent)
+        for i in range(ftype.size):
+            ftype_ra = ftype[i] + 2 * ftb_kids[i]
+            min_rent = min_rent_thd[ftype_ra]  # relevant min rent threshold
+            max_rate = max_ra_rate[ftype_ra] if not sharer[i] else \
+                max_ra_rate[ftype_ra] * 0.5
+            if rent[i] > min_rent:
+                ra_amt[i] = max(min(((rent[i] - min_rent) * ra_prop),
+                                max_rate), 0)
+        return ra_amt
+
+    @staticmethod
+    @jit(nopython=True)
+    def calc_rent_assistance(ftype, ftb_kids, rent, sharer, min_rent_thd,
+                             max_ra_rate, ra_prop):
+        """
+        Calculate rent assistance payable
+
+        ftype: family type
+        ftb_kids: number of ftb kids
+        rent: fortnightly rent paid
+        sharer: whether sharer
+        min_rent_thd: minimum rent threshold parameter
+        max_ra_rate: maximum rent assistance payable parameter
+        ra_prop: proportion of rent paid parameter
+
+        returns
+        ra_amt: amount of rent assistance payable
+        """
+        ra_amt = np.zeros_like(rent)
+        for i in range(ftype.size):
+            ftype_ra = ftype[i] + 2 * ftb_kids[i]
+            min_rent = min_rent_thd[ftype_ra]  # relevant min rent threshold
+            max_rate = max_ra_rate[ftype_ra]  # relevant max rent payable
+            # if rent payment is less than the minimum rent threshold, no rent
+            # assistance is payable
+            if rent[i] < min_rent:
+                ra_amt[i] = 0
+            else:
+                if sharer[i]:
+                    max_rate *= 0.5
+                ra_amt[i] = max(min(((rent[i] - min_rent) * ra_prop),
+                                max_rate), 0)
+        return ra_amt
+
+    @staticmethod
+    def calc_rent_assistance_py(ftype, ftb_kids, rent, sharer, min_rent_thd,
+                                max_ra_rate, ra_prop):
+        """
+        Calculate rent assistance payable (pure python)
+
+        ftype: family type
+        ftb_kids: number of ftb kids
+        rent: fortnightly rent paid
+        sharer: whether sharer
+        min_rent_thd: minimum rent threshold parameter
+        max_ra_rate: maximum rent assistance payable parameter
+        ra_prop: proportion of rent paid parameter
+
+        returns
+        ra_amt: amount of rent assistance payable
+        """
+        ra_amt = np.zeros_like(rent)
+        for i in range(ftype.size):
+            ftype_ra = ftype[i] + 2 * ftb_kids[i]
+            min_rent = min_rent_thd[ftype_ra]  # relevant min rent threshold
+            max_rate = max_ra_rate[ftype_ra]  # relevant max rent payable
+            # if rent payment is less than the minimum rent threshold, no rent
+            # assistance is payable
+            if rent[i] < min_rent:
+                ra_amt[i] = 0
+            else:
+                if sharer[i]:
+                    max_rate *= 0.5
+                ra_amt[i] = max(min(((rent[i] - min_rent) * ra_prop),
+                                max_rate), 0)
+        return ra_amt
+
+
+class RentAssistanceDefault(RentAssistance):
+    """
+    Default Rent Assistance class
+    """
+    pass
+
+class RentAssistance2013Q3(RentAssistance):
+    """
+    Rent Assistance class for 2013Q3
+
+    Add: foo method
+    """
+    def foo(self):
+        print(self.__class__.__name__)
+
+
+
+
+z = RentAssistance.factory('2013Q4')
+def test_calc(ra_func):
+    """
+    Test rent assistance calculation functions
+    """
+    print(30 * '-')
+    name = ra_func.__name__
+    print('testing {}'.format(name))
+
+    # set up data
+    size = int(10**5)
+    ftype = np.random.randint(0, 2, size, dtype=np.int8)
+    kids = np.random.randint(0, 3, size, dtype=np.int8)
+    rent = np.random.choice([0.0, 100, 150, 200, 250, 300, 350, 400], size)
+    sharer = np.full(size, True, dtype=bool)
+    ra_prop = np.array(0.75)
+    min_rent_thd = np.array([117.80, 191.00, 154.84, 229.18, 154.84, 229.18], dtype=np.float64)
+    max_ra_rate = np.array([132.2, 124.6, 155.26, 155.26, 175.42, 175.42], dtype=np.float64)
+
+    # check that outputs match
+    f1 = z.calc_rent_assistance_py(ftype, kids, rent, sharer, min_rent_thd,
+                                 max_ra_rate, ra_prop)
+    f2 = ra_func(ftype, kids, rent, sharer, min_rent_thd, max_ra_rate, ra_prop)
+    assert np.allclose(f1, f2), 'Results do not match'
+    print('Results match')
+
+    # time the function
+    times = []
+    for i in range(5):
+        t0 = time.time()
+        ra_func(ftype, kids, rent, sharer, min_rent_thd, max_ra_rate, ra_prop)
+        t1 = time.time()
+        times.append(t1 - t0)
+    print('Execution time: {:.2g} sec'.format(np.median(times)))
+
+print(z.calc_rent_assistance.__name__)
+
+test_calc(z.calc_rent_assistance_py)
+test_calc(z.calc_rent_assistance)
+test_calc(z.calc_rent_assistance2)
+
+size = int(10**5)
 ftype = np.random.randint(0, 2, size, dtype=np.int8)
 kids = np.random.randint(0, 3, size, dtype=np.int8)
 rent = np.random.choice([0.0, 100, 150, 200, 250, 300, 350, 400], size)
@@ -15,70 +183,40 @@ sharer = np.full(size, False, dtype=bool)
 ra_prop = np.array(0.75)
 min_rent_thd = np.array([117.80, 191.00, 154.84, 229.18, 154.84, 229.18], dtype=np.float64)
 max_ra_rate = np.array([132.2, 124.6, 155.26, 155.26, 175.42, 175.42], dtype=np.float64)
+ra_amt = np.zeros_like(rent)
 
-# get family type for rent assistance purposes
-# 0 = single, 1 = couple, 2 = single (1-2), 3 = single (3+)
-# 4 = couple(1-2), 5 = couple (3+)
+# @jit(nopython=True)
+def calc_rent_assistance(ftype, ftb_kids, rent, sharer, min_rent_thd,
+                         max_ra_rate, ra_prop):
+    """
+    Calculate rent assistance payable
 
-class RentAssistance(object):
-    def __init__(self, period):
-        pass
+    ftype: family type
+    ftb_kids: number of ftb kids
+    rent: fortnightly rent paid
+    sharer: whether sharer
+    min_rent_thd: minimum rent threshold parameter
+    max_ra_rate: maximum rent assistance payable parameter
+    ra_prop: proportion of rent paid parameter
 
-
-
-# numpy implementation
-def get_ra_ftype_np(fam_type, ftb_kids):
-    return fam_type + 2 * ftb_kids
-
-# vectorized
-@vectorize([int8(int8, int8)])
-def get_ra_ftype_vec(fam_type, ftb_kids):
-    ftype_ra = fam_type + 2 * ftb_kids
-    return ftype_ra
-
-# jitted
-@jit()
-def get_ra_ftype_jit(fam_type, ftb_kids):
-    ftype_ra = np.zeros_like(fam_type)
-    for i in range(fam_type.size):
-        ftype_ra[i] = fam_type[i] + 2 * ftb_kids[i]
-    return ftype_ra
-
-z_np = get_ra_ftype_np(ftype, kids)
-z_vec = get_ra_ftype_vec(ftype, kids)
-z_jit = get_ra_ftype_jit(ftype, kids)
-print(np.allclose(z_vec, z_jit))
-print(np.allclose(z_np, z_jit))
-
-
-
-
-
-# this can be jitted
-@jit()
-def bar(ftype_ra, min_rent_thd, max_ra_rate, ra_prop, rent, sharer):
-    ans = np.zeros_like(rent)
-    # get row stuff
-    for i in range(ftype_ra.size):
-        ftype = ftype_ra[i]
-        min_rent = min_rent_thd[ftype]
-        max_rate = max_ra_rate[ftype]
-        # rent_amt = rent[i]
-        if rent[i] - min_rent < 0:
-            ans[i] = 0
+    returns
+    ra_amt: amount of rent assistance payable
+    """
+    ra_amt = np.zeros_like(rent)
+    ftype_ra = ftype + 2 * ftb_kids
+    for i in range(ftype.size):
+        # ftype_ra = ftype[i] + 2 * ftb_kids[i]
+        min_rent = min_rent_thd[ftype_ra[i]]  # relevant min rent threshold
+        max_rate = max_ra_rate[ftype_ra[i]]  # relevant max rent payable
+        # if rent payment is less than the minimum rent threshold, no rent
+        # assistance is payable
+        if rent[i] < min_rent:
+            ra_amt[i] = 0
         else:
             if sharer[i]:
                 max_rate *= 0.5
-            ans[i] = max(min(((rent[i] - min_rent) * ra_prop), max_rate), 0)
-    return ans
+            ra_amt[i] = max(min(((rent[i] - min_rent) * ra_prop),
+                            max_rate), 0)
+    return ra_amt
 
-rent_ass = bar(z_vec, min_rent_thd, max_ra_rate, ra_prop, rent, sharer)
 
-print(z_vec)
-print(min_rent_thd)
-print(max_ra_rate)
-print(rent)
-print(sharer)
-
-# df = pd.DataFrame([z_vec, rent, sharer, rent_ass]).T
-# print(df)
