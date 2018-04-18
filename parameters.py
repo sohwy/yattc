@@ -8,31 +8,25 @@ import numpy as np
 
 # yattc modules
 from indexation import Index
+from base_policy import BaseClass
 
 
-class Parameters(object):
+class Parameters(BaseClass):
     """
     Parameters class
     """
 
     DEFAULT_FILENAME = 'current_parameters.json'
-    DEFAULT_PERIODS = ["2013Q3", "2013Q4",
-                       "2014Q1", "2014Q2", "2014Q3", "2014Q4",
-                       "2015Q1", "2015Q2", "2015Q3", "2015Q4",
-                       "2016Q1", "2016Q2", "2016Q3", "2016Q4",
-                       "2017Q1", "2017Q2", "2017Q3", "2017Q4"]
-    # remember if you change DEFAULT_PERIODS to make sure you have updated
-    # every parameter as well
-    DEFAULT_START_PERIOD = DEFAULT_PERIODS[0]
-    DEFAULT_END_PERIOD = DEFAULT_PERIODS[-1]
-    DEFAULT_NUM_CUR_PERIODS = len(DEFAULT_PERIODS)
+    DEFAULT_START_PERIOD = BaseClass.DEFAULT_PERIODS[0]
+    DEFAULT_END_PERIOD = BaseClass.DEFAULT_PERIODS[-1]
+    DEFAULT_NUM_CUR_PERIODS = len(BaseClass.DEFAULT_PERIODS)
     DEFAULT_NUM_FWD_PERIODS = 2
     DEFAULT_NUM_PERIODS = DEFAULT_NUM_CUR_PERIODS + DEFAULT_NUM_FWD_PERIODS
 
     def __init__(self,
                  parameter_dict=None,
                  indices_dict=None,
-                 periods=DEFAULT_PERIODS,
+                 periods=BaseClass.DEFAULT_PERIODS,
                  num_fwd_periods=DEFAULT_NUM_FWD_PERIODS):
         self._num_cur_periods = len(periods)
         self._num_fwd_periods = num_fwd_periods
@@ -50,18 +44,22 @@ class Parameters(object):
 
         # Read in parameters
         if parameter_dict is None:
-            with open(Parameters.DEFAULT_FILENAME) as f:
-                self.vals = json.load(f)
+            with open(self.DEFAULT_FILENAME) as f:
+                file_contents = json.load(f)
+                self.metadata = file_contents['meta']
+                self.vals = file_contents['read']
         elif isinstance(parameter_dict, dict):
             self.vals = parameter_dict
         else:
             raise ValueError('parameter_dict must be None or a dictionary')
 
         # Set default parameter values after padding and inflating known values
-        if not np.all(self.ind.final_periods >= self.end_period):
-            raise ValueError('Index series shorter than number of specified '
-                             + 'periods {}'.format(self.ind.final_periods
-                                                   - self.end_period))
+        # if not np.all(self.ind.final_periods >= self.end_period):
+        #     raise ValueError('Index series shorter than number of specified '
+        #                      + 'periods {}'.format(self.ind.final_periods
+        #                                            - self.end_period))
+
+        assert np.all(self.ind.final_periods >= self.end_period)
         self.set_default_parameter_vals()
 
     @property
@@ -401,3 +399,4 @@ print('======this is ra max rate======')
 print(p._ra_max_rate)
 print(p.ra_max_rate)
 print(p._ra_rent_pct)
+print(p.metadata)

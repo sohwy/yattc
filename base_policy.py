@@ -5,19 +5,6 @@ BasePolicy Class
 import abc
 
 
-class BasePolicy(object, metaclass=abc.ABCMeta):
-
-    DEFAULT_PERIODS = ["2013Q3", "2013Q4",
-                       "2014Q1", "2014Q2", "2014Q3", "2014Q4",
-                       "2015Q1", "2015Q2", "2015Q3", "2015Q4",
-                       "2016Q1", "2016Q2", "2016Q3", "2016Q4",
-                       "2017Q1", "2017Q2", "2017Q3", "2017Q4"]
-
-    @abc.abstractmethod
-    def factory(period):
-        """
-        Construct an instance of the policy
-        """
 
 class BaseClass(object, metaclass=abc.ABCMeta):
 
@@ -27,8 +14,16 @@ class BaseClass(object, metaclass=abc.ABCMeta):
                        "2016Q1", "2016Q2", "2016Q3", "2016Q4",
                        "2017Q1", "2017Q2", "2017Q3", "2017Q4"]
 
-    @abc.abstractproperty
     DEFAULT_FILENAME = None
+
+
+class BasePolicy(BaseClass, metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def factory(period):
+        """
+        Construct an instance of the policy
+        """
 
 
 class TestPolicy(BasePolicy):
@@ -51,6 +46,7 @@ class PolicyB(TestPolicy): pass
 class PolicyC(TestPolicy): pass
 
 
+print(BasePolicy.DEFAULT_PERIODS)
 # z = TestPolicy.factory('a')
 # print(z.__class__.__name__)
 

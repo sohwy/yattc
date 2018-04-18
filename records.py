@@ -8,15 +8,20 @@ import numpy as np
 import io
 import os
 
+from base_policy import BaseClass
 
-class Records(object):
+
+class Records(BaseClass):
 
     CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
     print(CURRENT_PATH)
     DEFAULT_FILENAME = 'some_data.dat'
-    DEFAULT_START_PERIOD = '2000Q3'
-    DEFAULT_END_PERIOD = '2018Q2'
+    # DEFAULT_START_PERIOD = '2000Q3'
+    # DEFAULT_END_PERIOD = '2018Q2'
     DEFAULT_METADATA = 'records_variables.json'
+
+    DEFAULT_START_PERIOD = BaseClass.DEFAULT_PERIODS[0]
+    DEFAULT_END_PERIOD = BaseClass.DEFAULT_PERIODS[-1]
 
     def __init__(self, records=None, records_metadata=None):
         self._start = pd.Period(self.DEFAULT_START_PERIOD, freq='Q')

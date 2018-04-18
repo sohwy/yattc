@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 import json
 import requests
+from base_policy import BaseClass
 
 
-class Index(object):
+class Index(BaseClass):
     """
     doctstring
     """
@@ -17,7 +18,10 @@ class Index(object):
         # read in index values
         if indices_dict is None:
             with open(self.DEFAULT_FILENAME) as f:
-                self.indices = json.load(f)
+                file_contents = json.load(f)
+                self.metadata = file_contents['meta']
+                self.indices = file_contents['read']
+                # self.indices = json.load(f)['read']
         elif isinstance(indices_dict, dict):
             self.indices = indices_dict
         else:
@@ -98,6 +102,9 @@ print(ind.cpi)
 print(ind.mte)
 print(ind.final_periods)
 
+print(ind.DEFAULT_PERIODS)
+print(ind.DEFAULT_FILENAME)
+print(ind.metadata)
 # print(len(ind.cpi))
 # print(ind.urls)
 # print(Index.get_api_data('cpi'))
