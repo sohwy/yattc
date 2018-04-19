@@ -3,18 +3,16 @@ Calculator class
 """
 
 import pandas as pd
-import numpy as np
 import copy
-import io
-
 
 # import yattc modules
 from records import Records
 from parameters import Parameters
-import policy
+from policy import Policy
+
 
 class Calculator(object):
-    def __init__(self, records=None, parameters=None):
+    def __init__(self, records=None, parameters=None, policy=None):
         # initialise embedded Records object
         if records is None:
             self.records = Records()
@@ -30,10 +28,9 @@ class Calculator(object):
             self.parameters = copy.deepcopy(parameters)
         else:
             raise ValueError('parameters must be None or a Parameters object')
-        # TODO: initialise Policy object
-        self.set_period('2017Q1')
-        z = policy.simple_func(self.var('variable1'), self.param('param_1'))
-        print(z)
+        # TODO: initialise embedded Policy object
+
+        
 
     def index_series(self, series):
         """
@@ -129,6 +126,10 @@ class Calculator(object):
         self.parameters.set_period(period)
         # TODO: include Records set_period method
 
+    def calc_all(self):
+        pass
+        
+
 
 
 # data = 'variable1,variable2,variable3\na,b,1\na,b,2\nc,d,3'
@@ -140,6 +141,8 @@ print(calc.parameters)
 
 print(calc.param('param_1'))
 print(calc.var('variable3'))
+print(calc.param('ra_max_rate'))
+calc.set_period('2018Q1')
 print(calc.param('ra_max_rate'))
 print(calc.parameters._ra_max_rate)
 print(calc.parameters.metadata)
