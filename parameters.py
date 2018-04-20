@@ -371,9 +371,9 @@ class Parameters(BaseClass):
 
 p = Parameters()
 
-# reform = p.read_reform_json('reform_params.json')
-# print(reform)
-# p.implement_reforms(reform)
+reform = p.read_reform_json('reform_params.json')
+print(reform)
+p.implement_reforms(reform)
 
 # print(type(p._start))
 # print(p._end, p.end_period)

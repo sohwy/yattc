@@ -13,7 +13,7 @@ class Policy(BaseClass):
     Policy class
     """
 
-    REQUIRED_POLICIES = ['rent']
+    VALID_POLICIES = ['rent']
 
     def __init__(self, periods=BaseClass.DEFAULT_PERIODS, *args, **kwargs):
         print(periods)
@@ -22,9 +22,9 @@ class Policy(BaseClass):
         self._current_period = self._start
         print(self._current_period)
 
-        self.init_policies()
+        self.set_default_policies()
 
-        self.policies_dict = {'rent_assistance': self.rent.__class__}
+        self.pol_map = {'rent': self.rent.__class__}
 
     @property
     def start_period(self):
@@ -40,9 +40,17 @@ class Policy(BaseClass):
 
     @property
     def policies(self):
-        return self.policies_dict
+        return self.pol_map
 
-    def init_policies(self, *args, **kwargs):
+    def set_default_policies(self, *args, **kwargs):
+        """
+        Set default policies
+
+        Policies that will be initialised:
+            rent.RentAssistance
+            ftb.Ftb
+            nsa.Nsa
+        """
         self.rent = \
             rent.RentAssistance.factory(kwargs.get('ra_pd',
                                                    self._current_period))
@@ -71,18 +79,30 @@ class Policy(BaseClass):
                 setattr(self, param[1:], value_array.loc[period])
             self._current_period = period
 
-    def set_policy(self):
+    def set_policy(self, policy_periods):
         """
         Set individual policy
+
+        policy_periods: dict
+            e.g. {period: [policy_1, policy_2, ... , policy_n]}
         """
-        pass
+        pol_factory = {"rent": rent.RentAssistance.factory}
+        for period, policies in policy_periods.items():
+            for policy in policies:
+                if policy not in self.VALID_POLICIES:
+                    raise ValueError('Unknown policy ' +
+                                     'name specified: {}'.format(policy))
+                setattr(self, policy, pol_factory[policy](period))
+                self.pol_map.update({policy: getattr(self, policy).__class__})
+
 
 
 
 pol1 = Policy()
 pol2 = Policy()
 
-# print(dir(pol.rent))
+z = {'2015Q1': ['rent']}
+pol2.set_policy(z)
 print(pol1.policies)
 print(pol2.policies)
 

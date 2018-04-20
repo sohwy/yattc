@@ -1,7 +1,14 @@
 {
-	"_comment1": "This is my comment",
-	"2001Q4": {"_param_1": [0.099], "_param_2": [4.001, 4.002]},
-	"_comment2": "Can i have another comment?",
-	"2007Q2": {"_param_2": [4.099]},
-	"2007Q3": {"_param_3": [[1, 4.099, 9.99]]}
+	"policies": {
+		"_comment1": "This is a comment in the policies block",
+		"2015Q1": ["rent"]
+	},
+
+	"parameters": {
+		"_comment1": "This is my comment",
+		"2013Q4": {"_param_1": [0.099], "_param_2": [4.001, 4.002]},
+		"_comment2": "Can i have another comment?",
+		"2017Q2": {"_param_2": [4.099]},
+		"2017Q3": {"_param_3": [[1, 4.099, 9.99]]}
+	}
 }
