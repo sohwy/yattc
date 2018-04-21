@@ -290,7 +290,9 @@ class Parameters(BaseClass):
             raise ValueError('Reform is not a dictionary')
         if reform is None:
             return
-        reform_periods = sorted(list(reform.keys()))
+        reform_periods = sorted(list(reform['parameters'].keys()))
+        # remove comments in are prefixed with an underscore
+        reform_periods = [p for p in reform_periods if not p.startswith('_')]
         print(reform_periods)
         # check first reform period
         if pd.Period(reform_periods[0], freq='Q') < self.start_period:
@@ -306,7 +308,7 @@ class Parameters(BaseClass):
         precall_current_period = self.current_period
         for period in reform_periods:
             self._current_period = pd.Period(period, freq='Q')
-            self.update_parameter(period, reform[period])
+            self.update_parameter(period, reform['parameters'][period])
         # self.set_period(precall_current_period.year,
         #                 precall_current_period.quarter)
         self.set_period(precall_current_period)
@@ -336,35 +338,36 @@ class Parameters(BaseClass):
                                          expanded_dim)
             current_vals[self.periods.loc[period]:] = new_vals
 
-    def read_reform_json(self, reform_json):
-        """
-        Read in JSON file with reform parameters
-
-        Parameters
-        ----------
-        reform_json : valid JSON file
-            Contains {period: {parameter: value}} pairs
-
-        Notes
-        -----
-        Can also be used to read in forward parameter files
-
-        TODO
-        ----
-        (1)
-            Validate parameter values and names
-
-        (2)
-            Proper exception handling
-
-        (3)
-            Validate period values
-        """
-        with open(reform_json) as f:
-            json_str = json.load(f)
+#     def read_reform_json(self, reform_json):
+#         """
+#         Read in JSON file with reform parameters
+# 
+#         Parameters
+#         ----------
+#         reform_json : valid JSON file
+#             Contains {period: {parameter: value}} pairs
+# 
+#         Notes
+#         -----
+#         Can also be used to read in forward parameter files
+# 
+#         TODO
+#         ----
+#         (1)
+#             Validate parameter values and names
+# 
+#         (2)
+#             Proper exception handling
+# 
+#         (3)
+#             Validate period values
+#         """
+#         with open(reform_json) as f:
+#             json_str = json.load(f)
             # all comments should be objects whose name begin with underscore
-            rfm = {k: v for k, v in json_str.items() if not k.startswith('_')}
-            return rfm
+            # rfm = {k: v for k, v in json_str.items() if not k.startswith('_')}
+            # return rfm
+            # return json_str
 
 
 

@@ -2,6 +2,7 @@
 Rent assistance class
 """
 
+import pandas as pd
 import numpy as np
 import time
 from base_policy import BasePolicy
@@ -12,9 +13,9 @@ class RentAssistance(BasePolicy):
 
     @staticmethod
     def factory(period):
-        if period == '2013Q3':
+        if period == pd.Period('2013Q3'):
             return RentAssistance2013Q3()
-        elif period in BasePolicy.DEFAULT_PERIODS:
+        elif period in BasePolicy.DEFAULT_PERIODS_PD:
             return RentAssistanceDefault()
         else:
             raise ValueError('Invalid value for period: {}'.format(period))

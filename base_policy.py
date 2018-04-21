@@ -3,6 +3,8 @@ BasePolicy Class
 """
 
 import abc
+import json
+import pandas as pd
 
 
 
@@ -13,8 +15,41 @@ class BaseClass(object, metaclass=abc.ABCMeta):
                        "2015Q1", "2015Q2", "2015Q3", "2015Q4",
                        "2016Q1", "2016Q2", "2016Q3", "2016Q4",
                        "2017Q1", "2017Q2", "2017Q3", "2017Q4"]
+    DEFAULT_PERIODS_PD = [pd.Period(x) for x in DEFAULT_PERIODS]
 
     DEFAULT_FILENAME = None
+
+    def read_reform_json(self, reform_json):
+        """
+        Read in JSON file with reform parameters
+
+        Parameters
+        ----------
+        reform_json : valid JSON file
+            Contains {period: {parameter: value}} pairs
+
+        Notes
+        -----
+        Can also be used to read in forward parameter files
+
+        TODO
+        ----
+        (1)
+            Validate parameter values and names
+
+        (2)
+            Proper exception handling
+
+        (3)
+            Validate period values
+        """
+        with open(reform_json) as f:
+            json_str = json.load(f)
+            # all comments should be objects whose name begin with underscore
+            # rfm = {k: v for k, v in json_str.items() if not k.startswith('_')}
+            # return rfm
+            return json_str
+
 
     # TODO: period properties
 
@@ -30,6 +65,8 @@ class BasePolicy(BaseClass, metaclass=abc.ABCMeta):
         Construct an instance of the policy
         """
 
+# z = BaseClass()
+# print(z.DEFAULT_PERIODS_PD)
 
 # class TestPolicy(BasePolicy):
 # 
