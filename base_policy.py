@@ -4,6 +4,7 @@ BasePolicy Class
 
 import abc
 import json
+import os
 import pandas as pd
 
 
@@ -18,7 +19,7 @@ class BaseClass(object, metaclass=abc.ABCMeta):
     DEFAULT_PERIODS_PD = [pd.Period(x) for x in DEFAULT_PERIODS]
 
     DEFAULT_FILENAME = None
-
+    
     def read_reform_json(self, reform_json):
         """
         Read in JSON file with reform parameters
@@ -43,12 +44,37 @@ class BaseClass(object, metaclass=abc.ABCMeta):
         (3)
             Validate period values
         """
-        with open(reform_json) as f:
-            json_str = json.load(f)
-            # all comments should be objects whose name begin with underscore
-            # rfm = {k: v for k, v in json_str.items() if not k.startswith('_')}
-            # return rfm
-            return json_str
+
+        def valid_structure(json_str):
+            valid_keys_1 = {'policies', 'parameters'}
+            valid_keys_2 = {p for p in self.DEFAULT_PERIODS}
+            # check if valid top level keys
+            assert set(json_str.keys()).issubset(valid_keys_1)
+            # check if keys in parameters are valid
+            has_params = json_str.get('parameters', None)
+            has_policies = json_str.get('policies', None)
+            if has_params:
+                param_keys = {k for k in json_str['parameters'].keys() if not
+                              k.startswith('_')}
+                assert param_keys.issubset(valid_keys_2)
+
+        # TODO: accept dictionary as argument
+        if isinstance(reform_json, dict):
+            valid_structure(reform_json)
+            return reform_json
+
+        elif isinstance(reform_json, str):
+            assert os.path.isfile(reform_json)
+            with open(reform_json) as f:
+                json_str = json.load(f)
+                valid_structure(json_str)
+                # TODO: check if valid file
+                # all comments should be objects whose name begin with underscore
+                # rfm = {k: v for k, v in json_str.items() if not k.startswith('_')}
+                # return rfm
+                return json_str
+        else:
+            raise NotImplementedError
 
 
     # TODO: period properties

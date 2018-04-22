@@ -15,6 +15,8 @@ class RentAssistance(BasePolicy):
     def factory(period):
         if period == pd.Period('2013Q3'):
             return RentAssistance2013Q3()
+        elif period == pd.Period('2015Q1'):
+            return RentAssistance2015Q1()
         elif period in BasePolicy.DEFAULT_PERIODS_PD:
             return RentAssistanceDefault()
         else:
@@ -132,7 +134,14 @@ class RentAssistance2013Q3(RentAssistance):
     def foo(self):
         print(self.__class__.__name__)
 
+class RentAssistance2015Q1(RentAssistance):
+    """
+    Rent Assistance class for 2015Q1
 
+    Add: foo method
+    """
+    def foo(self):
+        print(self.__class__.__name__)
 
 
 # z = RentAssistance.factory('2013Q4')
