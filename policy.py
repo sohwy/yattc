@@ -12,8 +12,6 @@ class Policy(BaseClass):
     """
     Policy class
     """
-
-    # VALID_POLICIES = ['rent', 'ftb', 'nsa']
     POL_FACTORY = {
             'rent': rent.RentAssistance.factory,
             'ftb': None,
@@ -33,13 +31,8 @@ class Policy(BaseClass):
                 'ftb': None,
                 'nsa': None
                 }
-        self.set_default_policies(self.current_period)
-
-        # self.pol_map = {
-        #         'rent': self.rent.__class__,
-        #         'ftb': None,
-        #         'nsa': None
-        #         }
+        # self.set_default_policies(self.current_period)
+        self.set_period(self.current_period)
 
     @property
     def start_period(self):
@@ -57,7 +50,8 @@ class Policy(BaseClass):
     def policies(self):
         return self.pol_map
 
-    def set_default_policies(self, period):
+    # def set_default_policies(self, period):
+    def set_period(self, period):
         """
         Set default policies. Can be used to initialise policies and to
         set policies to a given period.
@@ -84,18 +78,11 @@ class Policy(BaseClass):
         if period != self.current_period:
             self._current_period = period
 
-    def set_policy(self, reform_input):
+    # def set_policy(self, reform_input):
+    def implement_reform(self, reform_input):
         """
-        Set individual policy
-
-        policy_periods: dict
-            e.g. {period: [policy_1, policy_2, ... , policy_n]}
+        Implement reform policies
         """
-        # pol_factory = {
-        #         'rent': rent.RentAssistance.factory,
-        #         'ftb': None,
-        #         'nsa': None
-        #         }
         reform = self.read_reform_json(reform_input)
         period_policies = {k: v for k, v in reform['policies'].items() if not
                            k.startswith('_')}
@@ -123,14 +110,16 @@ print(pol1.policies)
 print(pol2.policies)
 print('pol3:', pol3.policies)
 z = {'policies': {'2015Q1': ['rent']}}
-pol1.set_policy(z)
+# pol1.set_policy(z)
+pol1.implement_reform(z)
 print(pol1.policies)
-pol2.set_policy('reform_params.json')
+# pol2.set_policy('reform_params.json')
+pol2.implement_reform('reform_params.json')
 print(pol2.policies)
 print(pol3.current_period)
-pol3.set_default_policies('2015Q1')
+pol3.set_period('2015Q1')
 print(pol3.current_period)
 print('pol3:', pol3.policies)
-pol3.set_default_policies('2013Q3')
+pol3.set_period('2013Q3')
 print(pol3.current_period)
 print('pol3:', pol3.policies)

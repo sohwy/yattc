@@ -313,6 +313,9 @@ class Parameters(BaseClass):
         #                 precall_current_period.quarter)
         self.set_period(precall_current_period)
 
+    def set_param(self):
+        pass
+
     def update_parameter(self, period, param_val_dict):
         """
         docstring
@@ -337,38 +340,6 @@ class Parameters(BaseClass):
                                          index_qtrs, data_type, column_names,
                                          expanded_dim)
             current_vals[self.periods.loc[period]:] = new_vals
-
-#     def read_reform_json(self, reform_json):
-#         """
-#         Read in JSON file with reform parameters
-# 
-#         Parameters
-#         ----------
-#         reform_json : valid JSON file
-#             Contains {period: {parameter: value}} pairs
-# 
-#         Notes
-#         -----
-#         Can also be used to read in forward parameter files
-# 
-#         TODO
-#         ----
-#         (1)
-#             Validate parameter values and names
-# 
-#         (2)
-#             Proper exception handling
-# 
-#         (3)
-#             Validate period values
-#         """
-#         with open(reform_json) as f:
-#             json_str = json.load(f)
-            # all comments should be objects whose name begin with underscore
-            # rfm = {k: v for k, v in json_str.items() if not k.startswith('_')}
-            # return rfm
-            # return json_str
-
 
 
 
@@ -403,3 +374,8 @@ print(p._ra_max_rate)
 print(p.ra_max_rate)
 print(p._ra_rent_pct)
 print(p.metadata)
+print(p.current_period)
+print(p.ra_max_rate)
+p.set_period('2016Q3')
+print(p.current_period)
+print(p.ra_max_rate)
