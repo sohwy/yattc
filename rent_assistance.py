@@ -14,11 +14,16 @@ class RentAssistance(BasePolicy):
     @staticmethod
     def factory(period):
         if period == pd.Period('2013Q3'):
+        # if period == '2013Q3':
             return RentAssistance2013Q3()
         elif period == pd.Period('2015Q1'):
+        # elif period == '2015Q1':
             return RentAssistance2015Q1()
         elif period in BasePolicy.DEFAULT_PERIODS_PD:
+        # elif period in BasePolicy.DEFAULT_PERIODS:
             return RentAssistanceDefault()
+        elif period == 'reform':
+            return RentAssistanceReform()
         else:
             raise ValueError('Invalid value for period: {}'.format(period))
 
@@ -125,6 +130,14 @@ class RentAssistanceDefault(RentAssistance):
     """
     pass
 
+
+class RentAssistanceReform(RentAssistance):
+    """
+    Reform Rent Assistance class
+    """
+    pass
+
+
 class RentAssistance2013Q3(RentAssistance):
     """
     Rent Assistance class for 2013Q3
@@ -133,6 +146,7 @@ class RentAssistance2013Q3(RentAssistance):
     """
     def foo(self):
         print(self.__class__.__name__)
+
 
 class RentAssistance2015Q1(RentAssistance):
     """

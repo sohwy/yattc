@@ -52,30 +52,30 @@ class BaseClass(object, metaclass=abc.ABCMeta):
             assert set(json_str.keys()).issubset(valid_keys_1)
             # check if keys in parameters are valid
             has_params = json_str.get('parameters', None)
-            has_policies = json_str.get('policies', None)
+            # has_policies = json_str.get('policies', None)
             if has_params:
                 param_keys = {k for k in json_str['parameters'].keys() if not
                               k.startswith('_')}
                 assert param_keys.issubset(valid_keys_2)
+#             if has_policies:
+#                 policy_keys = {k for k in json_str['policies'].keys() if not
+#                                k.startswith('_')}
+#                 assert policy_keys.issubset(valid_keys_2 | {'reform'})
 
-        # TODO: accept dictionary as argument
+        # reform_json is a dictionary
         if isinstance(reform_json, dict):
             valid_structure(reform_json)
             return reform_json
-
+        # reform json is a file
         elif isinstance(reform_json, str):
             assert os.path.isfile(reform_json)
             with open(reform_json) as f:
                 json_str = json.load(f)
                 valid_structure(json_str)
-                # TODO: check if valid file
-                # all comments should be objects whose name begin with underscore
-                # rfm = {k: v for k, v in json_str.items() if not k.startswith('_')}
-                # return rfm
                 return json_str
+        # reform json is something else
         else:
             raise NotImplementedError
-
 
     # TODO: period properties
 

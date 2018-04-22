@@ -4,6 +4,7 @@ Policy class
 
 
 import pandas as pd
+import re
 from base_policy import BaseClass
 import rent_assistance as rent
 
@@ -31,7 +32,7 @@ class Policy(BaseClass):
                 'ftb': None,
                 'nsa': None
                 }
-        # self.set_default_policies(self.current_period)
+        # set default policies for the current period
         self.set_period(self.current_period)
 
     @property
@@ -66,38 +67,37 @@ class Policy(BaseClass):
             raise ValueError('Policy period must be '
                              + 'between [{}, {}]'.format(self.start_period,
                                                          self.end_period))
-        # self.rent = rent.RentAssistance.factory(period)
         for policy in self.POL_FACTORY.keys():
             # TODO: remove this later when all policy factories are built
             # need this if block for now because of NoneType not callable
             if self.POL_FACTORY[policy]:
-                setattr(self,
-                        policy,
-                        self.POL_FACTORY[policy](pd.Period(period)))
+                setattr(self, policy, self.POL_FACTORY[policy](period))
                 self.pol_map.update({policy: getattr(self, policy).__class__})
-        if period != self.current_period:
-            self._current_period = period
+        self._current_period = period
 
     # def set_policy(self, reform_input):
     def implement_reform(self, reform_input):
         """
         Implement reform policies
+
+        reform_input: dict, str
+            Dictionary or JSON string containing the policy reform to
+            implement
         """
+        period_match = re.compile('\d{4,4}Q\d', re.IGNORECASE)
         reform = self.read_reform_json(reform_input)
         period_policies = {k: v for k, v in reform['policies'].items() if not
                            k.startswith('_')}
-        # for period, policies in reform['policies'].items():
         for period, policies in period_policies.items():
-            # need to get rid of underscore prefixed keys
-            # policies = {k: v for k, v in json_str.items() if not k.startswith('_')}
+            # if period is like a date e.g. 2015Q1, then convert it into a
+            # pandas Period object
+            if period_match.match(period):
+                period = pd.Period(period)
             for policy in policies:
-                # if policy not in self.VALID_POLICIES:
                 if policy not in self.POL_FACTORY.keys():
-                    raise ValueError('Invalid policy ' +
-                                     'name specified: {}'.format(policy))
-                setattr(self,
-                        policy,
-                        self.POL_FACTORY[policy](pd.Period(period)))
+                    msg = 'Invalid policy name specified: {}'
+                    raise ValueError(msg.format(policy))
+                setattr(self, policy, self.POL_FACTORY[policy](period))
                 self.pol_map.update({policy: getattr(self, policy).__class__})
 
 
@@ -106,16 +106,18 @@ class Policy(BaseClass):
 pol1 = Policy()
 pol2 = Policy('2013Q3')
 pol3 = Policy('2013Q4')
-print(pol1.policies)
-print(pol2.policies)
+print('pol1:', pol1.policies)
+print('pol2:', pol2.policies)
 print('pol3:', pol3.policies)
-z = {'policies': {'2015Q1': ['rent']}}
+# z = {'policies': {'2015Q1': ['rent']}}
+z = {'policies': {'reform': ['rent']}}
 # pol1.set_policy(z)
 pol1.implement_reform(z)
-print(pol1.policies)
+print('pol1:', pol1.policies)
+print(pol1.current_period)
 # pol2.set_policy('reform_params.json')
 pol2.implement_reform('reform_params.json')
-print(pol2.policies)
+print('pol2:', pol2.policies)
 print(pol3.current_period)
 pol3.set_period('2015Q1')
 print(pol3.current_period)
