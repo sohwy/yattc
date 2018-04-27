@@ -98,7 +98,7 @@ class Parameters(BaseClass):
         """
         if hasattr(self, 'vals'):
             for param, data in self.vals.items():
-                print(param, data)
+                # print(param, data)
                 values = data['values']
                 column_names = data.get('columns', ['values'])
                 index_method = data.get('index_method', dict())
@@ -370,12 +370,13 @@ print(p.param_3)
 # print(p.param_3)
 # print(p.vals)
 print('======this is ra max rate======')
-print(p._ra_max_rate)
-print(p.ra_max_rate)
+print(p._ra_max_rt)
+print(p.ra_max_rt)
 print(p._ra_rent_pct)
 print(p.metadata)
 print(p.current_period)
-print(p.ra_max_rate)
+print(p.ra_max_rt)
 p.set_period('2016Q3')
 print(p.current_period)
-print(p.ra_max_rate)
+print(p.ra_max_rt)
+print(p._ftba_es_rt)
