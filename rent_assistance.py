@@ -158,7 +158,7 @@ class RentAssistance2015Q1(RentAssistance):
         print(self.__class__.__name__)
 
 
-# z = RentAssistance.factory('2013Q4')
+# z = RentAssistance.factory(pd.Period('2013Q4'))
 # def test_calc(ra_func):
 #     """
 #     Test rent assistance calculation functions
