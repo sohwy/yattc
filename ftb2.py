@@ -118,11 +118,122 @@ def maint_inc_test_calc(ch_maint, maint_inc_p1, maint_inc_p2, recipients,
 
         # NOTE: use this
         # return 0
-    # res = (maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr
+    res = (maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr
     # return res if res > 0 else 0
+    return max(0, res)
     # return 0
     # NOTE: this is almost twice as fast as using max()
-    return (maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr if ((maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr) > 0 else 0
+    # return (maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr if ((maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr) > 0 else 0
+
+
+def ftbb_amt_calc(ch_young, ftb_inc_p1, ftb_inc_p2, isp_rcp, ftype,
+                  ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt):
+    """
+    Calculate ftbb amount
+    Arguments:
+        Variables:
+            ch_young
+            ftb_inc_p1
+            ftb_inc_p2
+            isp_rcp
+            ftype
+        Parameters:
+            ftbb_pri_inc_lmt
+            ftbb_sec_inc_lmt
+            ftbb_std_amt
+    """
+    # primary earner income exceeds limit $100_000
+    if ftb_inc_p1 > ftbb_pri_inc_lmt:
+        return 0
+    # assign ftbb standard rates depending on age of youngest child
+    if ch_young < 5:
+        std_amt = ftbb_std_amt[0]
+    elif ch_young < 13:
+        std_amt = ftbb_std_amt[1]
+    else:
+        std_amt = ftbb_std_amt[2]
+    # single or income support recipient are not income tested
+    if ftype == 0 or isp_rcp:
+        return std_amt
+
+
+@numba.jit(nopython=True)
+def ftbb_std_amt_calc(ch_young, ftb_inc_p1,
+                      ftbb_pri_inc_lmt, ftbb_std_amt):
+    """
+    Calculate ftbb standard rate maximum amount
+    Arguments:
+        Variables:
+            ch_young
+            ftb_inc_p1
+        Parameters:
+            ftbb_pri_inc_lmt
+            ftbb_std_amt
+    """
+    # primary earner income exceeds limit $100_000
+    if ftb_inc_p1 > ftbb_pri_inc_lmt:
+        return 0
+    # below code only applies to primary earners earning below the limit
+    # assign ftbb standard rates depending on age of youngest child
+    if ch_young < 5:
+        return ftbb_std_amt[0]
+    elif ch_young < 13:
+        return ftbb_std_amt[1]
+    else:
+        return ftbb_std_amt[2]
+
+
+@numba.jit(nopython=True)
+def ftbb_inc_test_calc(ftb_inc_p2, isp_rcp,
+                       ftbb_sec_inc_lmt, ftbb_tpr):
+    """
+    Calculate reduction to ftbb due to income test on secondary earner
+    Arguments:
+        Variables:
+            ftb_inc_p2
+            isp_rcp
+        Parameters:
+            ftbb_sec_inc_lmt
+            ftbb_tpr
+    Returns:
+    Reduction to ftbb due to income test on secondary earner
+    """
+    if isp_rcp or ftb_inc_p2 <= ftbb_sec_inc_lmt:
+        return 0
+    else:
+        return (ftb_inc_p2 - ftbb_sec_inc_lmt) * ftbb_tpr
+
+
+def ftbb_es_amt_calc():
+    """
+    Calculate ftbb energy supplement amount
+    Arguments:
+        Variables:
+        Parameters:
+    Returns:
+    """
+    pass
+
+
+
+
+def ftbb_amt_calc(ch_young, ftb_inc_p1, ftb_inc_p2, isp_rcp, ftype,
+                  ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt, ftbb_tpr):
+    std_max = np.zeros(obs.size)
+    inc_test_redn = np.zeros(obs.size)
+    ftbb_amt = np.zeros(obs.size)
+    for i in range(obs.size):
+        # calculate maximum ftbb amount
+        std_max[i] = ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftb_inc_p2[i], isp_rcp[i], ftype[i],
+                                       ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt, ftbb_tpr)
+        # secondary earner income test only applies to excess income over the limit
+        inc_test_redn[i] = ftbb_inc_test_calc(ftb_inc_p2, ftbb_sec_inc_lmt, ftbb_tpr)
+        # calculate income tested ftbb amount
+        ftbb_amt[i] = std_max[i] - inc_test_redn[i]
+    return ftbb_amt
+
+
+
 
 def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_amt, ch_maint, maint_inc_p1, maint_inc_p2, maint_inc_rcp,
                   ftba_std_rt, ftba_es_rt, ftba_supp, ftba_supp_inc_lmt, nbs_rt, ftba_tpr, ftba_free_area, maint_inc_base, maint_inc_add, maint_inc_tpr):
@@ -199,7 +310,7 @@ def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_
         m1_inc_test_redn[i] = ftba_inc_test_calc(ftb_inc, ftba_tpr[0],
                                                  ftba_free_area[0])
         # maintenance income test reduction
-        if maint_inc_recp > 0:
+        if maint_inc_rcp > 0:
             maint_inc_test_redn[i] = maint_inc_test_calc(ch_maint[i],
                                                          maint_inc_p1[i],
                                                          maint_inc_p2[i],
