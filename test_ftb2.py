@@ -40,7 +40,7 @@ in_args = {
         'use_max': True
         }
 
-# test_funcs(ftba_std_amt_calc_iter, ftba_std_amt_calc_iter_jit, **in_args)
+test_funcs(ftba_std_amt_calc_iter, ftba_std_amt_calc_iter_jit, **in_args)
 
 
 ######################
@@ -67,7 +67,7 @@ in_args = {
         'nbs_rt': np.array([540.54, 1618.89])
         }
 
-# test_funcs(nbs_amt_calc_iter, nbs_amt_calc_iter_jit, **in_args)
+test_funcs(nbs_amt_calc_iter, nbs_amt_calc_iter_jit, **in_args)
 
 
 ######################
@@ -96,3 +96,37 @@ in_args = {
         }
 
 test_funcs(ftba_inc_test_calc_iter, ftba_inc_test_calc_iter_jit, **in_args)
+
+######################
+# maint_inc_test_calc
+######################
+# ch_maint, maint_inc_p1, maint_inc_p2, maint_inc_base, maint_inc_add, maint_inc_tpr
+
+y = ftb.maint_inc_test_calc(1, 1000, 0, 1, 1587.75, 529.25, 0.5)
+print(y)
+
+def maint_inc_test_calc_iter(ch_maint, maint_inc_p1, maint_inc_p2, maint_inc_recp, maint_inc_base, maint_inc_add, maint_inc_tpr):
+    res = np.zeros(obs.size)
+    for i in range(obs.size):
+        res[i] = ftb.maint_inc_test_calc(ch_maint[i],
+                                         maint_inc_p1[i],
+                                         maint_inc_p2[i],
+                                         maint_inc_recp[i],
+                                         1587.75,
+                                         529.25,
+                                         0.5)
+    return res
+
+maint_inc_test_calc_iter_jit = numba.jit(nopython=True)(maint_inc_test_calc_iter)
+
+in_args = {
+        'ch_maint': np.random.randint(0, 3, obs.size),
+        'maint_inc_p1': np.random.uniform(0, 5000, obs.size),
+        'maint_inc_p2': np.random.uniform(0, 5000, obs.size),
+        'maint_inc_recp': np.random.randint(0, 3, obs.size),
+        'maint_inc_base': 1587.75,
+        'maint_inc_add': 529.25,
+        'maint_inc_tpr': 0.5
+        }
+
+test_funcs(maint_inc_test_calc_iter, maint_inc_test_calc_iter_jit, **in_args)

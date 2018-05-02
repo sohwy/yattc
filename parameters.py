@@ -110,6 +110,7 @@ class Parameters(BaseClass):
                     msg = 'Incorrect number of parameter values specified ' \
                           'in the parameter: {}'
                     raise ValueError(msg.format(param))
+                print(param)
                 setattr(self, param, self.expand_array(values,
                                                        index_method,
                                                        index_args,

@@ -22,10 +22,13 @@ def ftba_std_amt_calc(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
     Returns:
     ftba standard or energy supplement maximum amount
     """
-    ftba_max_std_amt = (ch_0012 * ftba_rt[1 * use_max]
-                        + ch_1315 * ftba_rt[2 * use_max]
-                        + ch_1619_sec * ftba_rt[3 * use_max])
-    return ftba_max_std_amt
+    # ftba_max_std_amt = (ch_0012 * ftba_rt[1 * use_max]
+    #                     + ch_1315 * ftba_rt[2 * use_max]
+    #                     + ch_1619_sec * ftba_rt[3 * use_max])
+    # return ftba_max_std_amt
+    return (ch_0012 * ftba_rt[1 * use_max]
+            + ch_1315 * ftba_rt[2 * use_max]
+            + ch_1619_sec * ftba_rt[3 * use_max])
 
 
 @numba.jit(nopython=True)
@@ -53,6 +56,7 @@ def nbs_amt_calc(ch_00, ch_dep, nbs_rt):
         return nbs_rt[0] * 365 / 91  # assign lower rate
 
 
+# @profile
 @numba.jit(nopython=True)
 def ftba_inc_test_calc(ftb_inc, ftba_tpr, ftba_free_area):
     """
@@ -66,13 +70,16 @@ def ftba_inc_test_calc(ftb_inc, ftba_tpr, ftba_free_area):
     Returns:
     ftba reduction due to income test
     """
-    if ftb_inc < ftba_free_area:
-        return 0
-    else:
-        return (ftb_inc - ftba_free_area) * ftba_tpr
+    # if ftb_inc < ftba_free_area:
+    #     return 0
+    # else:
+    #     return (ftb_inc - ftba_free_area) * ftba_tpr
+    # return 0 if ftb_inc < ftba_free_area else (ftb_inc - ftba_free_area) * ftba_tpr
+    return (ftb_inc - ftba_free_area) * ftba_tpr if ftb_inc > ftba_free_area else 0
 
-
-def maint_inc_test_calc(ch_maint, maint_inc_p1, maint_inc_p2,
+# @profile
+@numba.jit(nopython=True)
+def maint_inc_test_calc(ch_maint, maint_inc_p1, maint_inc_p2, recipients,
                         maint_inc_base, maint_inc_add, maint_inc_tpr):
     """
     Calculate maintenance income test reduction
@@ -88,19 +95,36 @@ def maint_inc_test_calc(ch_maint, maint_inc_p1, maint_inc_p2,
         Returns:
         ftba reduction due to maintenance income test
         """
-    maint_inc = maint_inc_p1 + maint_inc_p2
-    if (maint_inc <= 0) or (ch_maint == 0):
-        return 0
+    # maint_inc = maint_inc_p1 + maint_inc_p2
+    # if (maint_inc <= 0) or (ch_maint == 0):
+    # if (maint_inc_p1 + maint_inc_p2 <= 0) or (ch_maint == 0):
+    # maint_inc_redn = 0
     # calculate MIFA as the base amount and any additional amount depending
     # on the number of child support children
-    recipients = (maint_inc_p1 > 0) + (maint_inc_p2 > 0)
-    mifa = maint_inc_base[recipients] + ch_maint * maint_inc_add
-    # reduction is based on excess amount of maintenance income over MIFA
-    maint_inc_redn = (maint_inc - mifa) * maint_inc_tpr
-    return maint_inc_redn
 
+    #NOTE: use this
+    # if (maint_inc_p1 + maint_inc_p2) <= maint_inc_base:
 
-def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_amt, ch_maint, maint_inc_p1, maint_inc_p2,
+    # if (maint_inc_p1 + maint_inc_p2) >= maint_inc_base:
+        # mifa = maint_inc_base[recipients] + (ch_maint - 1) * maint_inc_add[recipients]
+        # reduction is based on excess amount of maintenance income over MIFA
+        # maint_inc_redn = ((maint_inc_p1 + maint_inc_p2) - mifa) * maint_inc_tpr
+
+        # maint_inc_redn = ((maint_inc_p1 + maint_inc_p2) - (maint_inc_base[recipients] + (ch_maint - 1) * maint_inc_add[recipients])) * maint_inc_tpr
+        # maint_inc_redn = ((maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add)) * maint_inc_tpr
+    # return maint_inc_redn
+
+        # return ((maint_inc_p1 + maint_inc_p2) - (maint_inc_base[recipients] + (ch_maint - 1) * maint_inc_add[recipients])) * maint_inc_tpr
+
+        # NOTE: use this
+        # return 0
+    # res = (maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr
+    # return res if res > 0 else 0
+    # return 0
+    # NOTE: this is almost twice as fast as using max()
+    return (maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr if ((maint_inc_p1 + maint_inc_p2) - (maint_inc_base * recipients + (ch_maint - 1) * maint_inc_add) * maint_inc_tpr) > 0 else 0
+
+def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_amt, ch_maint, maint_inc_p1, maint_inc_p2, maint_inc_rcp,
                   ftba_std_rt, ftba_es_rt, ftba_supp, ftba_supp_inc_lmt, nbs_rt, ftba_tpr, ftba_free_area, maint_inc_base, maint_inc_add, maint_inc_tpr):
     """
     Calculate ftba amount
@@ -116,6 +140,7 @@ def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_
             ch_maint: number of child support children
             maint_inc_p1: person 1 maintenance income
             maint_inc_p2: person 2 maintenance income
+            maint_inc_rcp: number of maintenance income recipients
         Parameters:
             ftba_std_rt: ftba standard rate
             ftba_es_rt: ftba energy supplement rate
@@ -174,12 +199,14 @@ def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_
         m1_inc_test_redn[i] = ftba_inc_test_calc(ftb_inc, ftba_tpr[0],
                                                  ftba_free_area[0])
         # maintenance income test reduction
-        maint_inc_test_redn[i] = maint_inc_test_calc(ch_maint[i],
-                                                     maint_inc_p1[i],
-                                                     maint_inc_p2[i],
-                                                     maint_inc_base,
-                                                     maint_inc_add,
-                                                     maint_inc_tpr)
+        if maint_inc_recp > 0:
+            maint_inc_test_redn[i] = maint_inc_test_calc(ch_maint[i],
+                                                         maint_inc_p1[i],
+                                                         maint_inc_p2[i],
+                                                         maint_inc_rcp[i],
+                                                         maint_inc_base,
+                                                         maint_inc_add,
+                                                         maint_inc_tpr)
         # calculate method 1 amount
         m1_amt[i] = max(0, m1_max[i] - m1_inc_test_redn[i] - maint_inc_test_redn[i])
         # method 2 calculation (only if income > hifa)
@@ -211,3 +238,14 @@ def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_
         # compare method 1 with method 2 amount and award the higher
         ftba_amt[i] = max(m1_amt[i], m2_amt[i])
     return ftba_amt
+
+
+def main():
+    for _ in range(obs.size):
+        # maint_inc_test_calc(1, 10000, 0, 1, np.array([1587.75, 1587.75, 3175.50]), np.array([529.25, 529.25, 529.25]), 0.5)
+        maint_inc_test_calc(1, 10000, 0, 1, 1587.75, 529.25, 0.5)
+        ftba_inc_test_calc(75000, 0.2, 52706)
+
+
+if __name__ == '__main__':
+    main()

@@ -7,7 +7,7 @@ def test_funcs(func1, func2, **kwargs):
     Test functions
     """
     print(30 * '-')
-    print('testing {} against {}'.format(func1.__name__, func2.__name__))
+    print('testing {0} against {1}'.format(func1.__name__, func2.__name__))
 
     # check that outputs match
     f1 = func1(**kwargs)
