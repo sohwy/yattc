@@ -4,7 +4,8 @@ obs = np.empty(10**5)
 
 
 @numba.jit(nopython=True)
-def ftba_std_amt_calc(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
+# def ftba_std_amt_calc(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
+def ftba_std_amt_calc(ch_0012, ch_1315, ch_1619_sec, ftba_std_rt, ftba_es_rt, use_max=True):
     """
     Calculate ftba standard rate maximum amount
     Also used to calculate ftba energy supplement amount
@@ -26,9 +27,9 @@ def ftba_std_amt_calc(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
     #                     + ch_1315 * ftba_rt[2 * use_max]
     #                     + ch_1619_sec * ftba_rt[3 * use_max])
     # return ftba_max_std_amt
-    return (ch_0012 * ftba_rt[1 * use_max]
-            + ch_1315 * ftba_rt[2 * use_max]
-            + ch_1619_sec * ftba_rt[3 * use_max])
+    return (ch_0012 * (ftba_std_rt[1 * use_max] + ftba_es_rt[1 * use_max])
+            + ch_1315 * (ftba_std_rt[2 * use_max] + ftba_es_rt[1 * use_max])
+            + ch_1619_sec * (ftba_std_rt[3 * use_max] + ftba_es_rt[1 * use_max]))
 
 
 @numba.jit(nopython=True)
@@ -48,13 +49,38 @@ def nbs_amt_calc(ch_00, ch_dep, nbs_rt):
     if ch_00 == 0 or ch_dep == 0:
         return 0
     # at least 1 newborn
-    elif ch_00 > 1:
-        return ch_00 * nbs_rt[1] * 365 / 91  # assign higher rate
     elif ch_00 == 1 and ch_dep == 1:
         return nbs_rt[1] * 365 / 91  # assign higher rate
-    else:
+    elif ch_00 == 1 and ch_dep > 1:
         return nbs_rt[0] * 365 / 91  # assign lower rate
+    # elif ch_00 > 1:
+    else:
+        return ch_00 * nbs_rt[1] * 365 / 91  # assign higher rate
 
+@numba.vectorize(nopython=True)
+def nbs_amt_calc_vec(ch_00, ch_dep, nbs_rt0, nbs_rt1):
+    """
+    Calculate newborn supplement amount
+    Arguments:
+        Variables:
+            ch_00: number of children aged 0-1
+            ch_dep: number of dependent children
+        Parameters:
+            nbs_rt: newborn supplement rate
+    Returns:
+    newborn supplement maximum amount
+    """
+    # no newborns or dependent children
+    if ch_00 == 0 or ch_dep == 0:
+        return 0
+    # at least 1 newborn
+    elif ch_00 == 1 and ch_dep == 1:
+        return nbs_rt1 * 365 / 91  # assign higher rate
+    elif ch_00 == 1 and ch_dep > 1:
+        return nbs_rt0 * 365 / 91  # assign lower rate
+    # elif ch_00 > 1:
+    else:
+        return ch_00 * nbs_rt1 * 365 / 91  # assign higher rate
 
 # @profile
 @numba.jit(nopython=True)
@@ -159,9 +185,9 @@ def ftbb_amt_calc(ch_young, ftb_inc_p1, ftb_inc_p2, isp_rcp, ftype,
 
 @numba.jit(nopython=True)
 def ftbb_std_amt_calc(ch_young, ftb_inc_p1,
-                      ftbb_pri_inc_lmt, ftbb_std_amt):
+                      ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt):
     """
-    Calculate ftbb standard rate maximum amount
+    Calculate ftbb standard rate maximum amount and any energy supplement
     Arguments:
         Variables:
             ch_young
@@ -169,6 +195,7 @@ def ftbb_std_amt_calc(ch_young, ftb_inc_p1,
         Parameters:
             ftbb_pri_inc_lmt
             ftbb_std_amt
+            ftbb_es_amt
     """
     # primary earner income exceeds limit $100_000
     if ftb_inc_p1 > ftbb_pri_inc_lmt:
@@ -176,11 +203,11 @@ def ftbb_std_amt_calc(ch_young, ftb_inc_p1,
     # below code only applies to primary earners earning below the limit
     # assign ftbb standard rates depending on age of youngest child
     if ch_young < 5:
-        return ftbb_std_amt[0]
+        return ftbb_std_amt[0] + ftbb_es_amt[0]
     elif ch_young < 13:
-        return ftbb_std_amt[1]
+        return ftbb_std_amt[1] + ftbb_es_amt[1]
     else:
-        return ftbb_std_amt[2]
+        return ftbb_std_amt[2] + ftbb_es_amt[1]
 
 
 @numba.jit(nopython=True)
@@ -216,23 +243,41 @@ def ftbb_es_amt_calc():
 
 
 
+# @profile
+# def ftbb_amt_calc(ch_young, ftb_inc_p1, ftb_inc_p2, isp_rcp,
+#                   ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt, ftbb_es_amt, ftbb_supp, ftbb_tpr):
+#     std_max = np.zeros(obs.size)
+#     inc_test_redn = np.zeros(obs.size)
+#     ftbb_amt = np.zeros(obs.size)
+#     for i in range(obs.size):
+#         # calculate maximum ftbb amount including energy supplement
+#         std_max[i] = ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt)
+#         # secondary earner income test only applies to excess income over the limit
+#         inc_test_redn[i] = ftbb_inc_test_calc(ftb_inc_p2[i], isp_rcp[i], ftbb_sec_inc_lmt, ftbb_tpr)
+#         # calculate income tested ftbb amount
+#         ftbb_amt[i] = max(std_max[i] + ftbb_supp - inc_test_redn[i], 0)
+#     return ftbb_amt
 
-def ftbb_amt_calc(ch_young, ftb_inc_p1, ftb_inc_p2, isp_rcp, ftype,
-                  ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt, ftbb_tpr):
-    std_max = np.zeros(obs.size)
-    inc_test_redn = np.zeros(obs.size)
+
+# @profile
+@numba.jit(nopython=True)
+def ftbb_amt_calc(ch_young, ftb_inc_p1, ftb_inc_p2, isp_rcp,
+                  ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt, ftbb_es_amt, ftbb_supp, ftbb_tpr):
+    # std_max = np.zeros(obs.size)
+    # inc_test_redn = np.zeros(obs.size)
     ftbb_amt = np.zeros(obs.size)
     for i in range(obs.size):
-        # calculate maximum ftbb amount
-        std_max[i] = ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftb_inc_p2[i], isp_rcp[i], ftype[i],
-                                       ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt, ftbb_tpr)
+        # calculate maximum ftbb amount including energy supplement
+        # std_max[i] = ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt)
         # secondary earner income test only applies to excess income over the limit
-        inc_test_redn[i] = ftbb_inc_test_calc(ftb_inc_p2, ftbb_sec_inc_lmt, ftbb_tpr)
+        # inc_test_redn[i] = ftbb_inc_test_calc(ftb_inc_p2[i], isp_rcp[i], ftbb_sec_inc_lmt, ftbb_tpr)
         # calculate income tested ftbb amount
-        ftbb_amt[i] = std_max[i] - inc_test_redn[i]
+        # ftbb_amt[i] = max(std_max[i] + ftbb_supp - inc_test_redn[i], 0)
+        ftbb_amt[i] = max(0, ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt) + ftbb_supp - ftbb_inc_test_calc(ftb_inc_p2[i], isp_rcp[i], ftbb_sec_inc_lmt, ftbb_tpr))
     return ftbb_amt
 
-
+    #     ftbb_amt[i] = ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt) + ftbb_supp - ftbb_inc_test_calc(ftb_inc_p2[i], isp_rcp[i], ftbb_sec_inc_lmt, ftbb_tpr)
+    # return np.maximum(0, ftbb_amt)
 
 
 def ftba_amt_calc(ftb_inc, ch_0012, ch_1315, ch_1619_sec, ch_00, ch_dep, ra_max_amt, ch_maint, maint_inc_p1, maint_inc_p2, maint_inc_rcp,
@@ -356,7 +401,19 @@ def main():
         # maint_inc_test_calc(1, 10000, 0, 1, np.array([1587.75, 1587.75, 3175.50]), np.array([529.25, 529.25, 529.25]), 0.5)
         maint_inc_test_calc(1, 10000, 0, 1, 1587.75, 529.25, 0.5)
         ftba_inc_test_calc(75000, 0.2, 52706)
-
+    in_args_7 = {
+        'ch_young': np.random.randint(0, 20, obs.size),
+        'ftb_inc_p1': np.random.uniform(0, 200000, obs.size),
+        'ftb_inc_p2': np.random.uniform(0, 10000, obs.size),
+        'isp_rcp': np.random.choice([False, True], obs.size),
+        'ftbb_pri_inc_lmt': 100000,
+        'ftbb_sec_inc_lmt': 5500,
+        'ftbb_std_amt': np.array([4055.15, 2843.15, 2843.15]),
+        'ftbb_es_amt': np.array([73.00, 51.10]),
+        'ftbb_supp': 375,
+        'ftbb_tpr': 0.5
+        }
+    ftbb_amt_calc(**in_args_7)
 
 if __name__ == '__main__':
     main()

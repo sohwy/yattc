@@ -6,41 +6,69 @@ from func_tester import test_funcs
 
 
 obs = np.empty(10**5)
+# obs = np.empty(2 * 10**4)
 
 ######################
 # ftba_std_amt_calc
 ######################
 
-y = ftb.ftba_std_amt_calc(1, 1, 0, np.array([1529.35, 4766.90, 6201.35, 6201.35]))
+# y = ftb.ftba_std_amt_calc(1, 1, 0, np.array([1529.35, 4766.90, 6201.35, 6201.35]))
+# print(y)
+# 
+# y = ftb.ftba_std_amt_calc(1, 1, 0, np.array([36.50, 91.25, 116.80, 116.80]))
+# print(y)
+# 
+# def ftba_std_amt_calc_iter(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
+#     res = np.zeros(obs.size)
+#     for i in range(obs.size):
+#         res[i] = ftb.ftba_std_amt_calc(ch_0012[i], ch_1315[i],
+#                                        ch_1619_sec[i], ftba_rt)
+#     return res
+# 
+# @numba.jit(nopython=True)
+# def ftba_std_amt_calc_iter_jit(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
+#     res = np.zeros(obs.size)
+#     for i in range(obs.size):
+#         res[i] = ftb.ftba_std_amt_calc(ch_0012[i], ch_1315[i],
+#                                        ch_1619_sec[i], ftba_rt)
+#     return res
+# 
+# in_args_1 = {
+#         'ch_0012': np.random.randint(0, 3, obs.size),
+#         'ch_1315': np.random.randint(0, 3, obs.size),
+#         'ch_1619_sec': np.random.randint(0, 3, obs.size),
+#         'ftba_rt': np.array([36.50, 91.25, 116.80, 116.80]),
+#         'use_max': True
+#         }
+
+
+y = ftb.ftba_std_amt_calc(1, 1, 0, np.array([1529.35, 4766.90, 6201.35, 6201.35]), np.array([36.50, 91.25, 116.80, 116.80]))
 print(y)
 
-y = ftb.ftba_std_amt_calc(1, 1, 0, np.array([36.50, 91.25, 116.80, 116.80]))
-print(y)
 
-def ftba_std_amt_calc_iter(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
+def ftba_std_amt_calc_iter(ch_0012, ch_1315, ch_1619_sec, ftba_std_rt, ftba_es_rt, use_max=True):
     res = np.zeros(obs.size)
     for i in range(obs.size):
         res[i] = ftb.ftba_std_amt_calc(ch_0012[i], ch_1315[i],
-                                       ch_1619_sec[i], ftba_rt)
+                                       ch_1619_sec[i], ftba_std_rt, ftba_es_rt)
     return res
 
 @numba.jit(nopython=True)
-def ftba_std_amt_calc_iter_jit(ch_0012, ch_1315, ch_1619_sec, ftba_rt, use_max=True):
+def ftba_std_amt_calc_iter_jit(ch_0012, ch_1315, ch_1619_sec, ftba_std_rt, ftba_es_rt, use_max=True):
     res = np.zeros(obs.size)
     for i in range(obs.size):
         res[i] = ftb.ftba_std_amt_calc(ch_0012[i], ch_1315[i],
-                                       ch_1619_sec[i], ftba_rt)
+                                       ch_1619_sec[i], ftba_std_rt, ftba_es_rt)
     return res
 
 in_args_1 = {
         'ch_0012': np.random.randint(0, 3, obs.size),
         'ch_1315': np.random.randint(0, 3, obs.size),
         'ch_1619_sec': np.random.randint(0, 3, obs.size),
-        'ftba_rt': np.array([36.50, 91.25, 116.80, 116.80]),
+        'ftba_std_rt': np.array([1529.35, 4766.90, 6201.35, 6201.35]),
+        'ftba_es_rt': np.array([36.50, 91.25, 116.80, 116.80]),
         'use_max': True
         }
-
-
 
 ######################
 # nbs_amt_calc
@@ -66,8 +94,6 @@ in_args_2 = {
         'nbs_rt': np.array([540.54, 1618.89])
         }
 
-
-
 ######################
 # ftba_inc_test_calc
 ######################
@@ -91,7 +117,6 @@ in_args_3 = {
         'ftba_tpr': np.array([0.2, 0.3])[0],
         'ftba_free_area': np.array([52706, 94316])[0]
         }
-
 
 ######################
 # maint_inc_test_calc
@@ -131,33 +156,35 @@ in_args_4 = {
 # ftbb_std_amt_calc
 ######################
 
-y = ftb.ftbb_std_amt_calc(1, 90000, 100000, np.array([4055.15, 2843.15, 2843.15]))
+# y = ftb.ftbb_std_amt_calc(1, 90000, 100000, np.array([4055.15, 2843.15, 2843.15]))
+y = ftb.ftbb_std_amt_calc(1, 90000, 100000, np.array([4055.15, 2843.15, 2843.15]), np.array([73.00, 51.10]))
 print(y)
 
 for ch_age in range(20):
     for income in range(0, 150000, 30000):
-        y = ftb.ftbb_std_amt_calc(ch_age, income, 100000, np.array([4055.15, 2843.15, 2843.15]))
+        y = ftb.ftbb_std_amt_calc(ch_age, income, 100000, np.array([4055.15, 2843.15, 2843.15]), np.array([73.00, 51.10]))
         print(ch_age, income, y)
 
-def ftbb_std_amt_calc_iter(ch_young, ftb_inc_p1, ftbb_pri_inc_lmt, ftbb_std_amt):
+def ftbb_std_amt_calc_iter(ch_young, ftb_inc_p1, ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt ):
     res = np.zeros(obs.size)
     for i in range(obs.size):
-        res[i] = ftb.ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt)
+        res[i] = ftb.ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt)
     return res
 
 
 @numba.jit(nopython=True)
-def ftbb_std_amt_calc_iter_jit(ch_young, ftb_inc_p1, ftbb_pri_inc_lmt, ftbb_std_amt):
+def ftbb_std_amt_calc_iter_jit(ch_young, ftb_inc_p1, ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt):
     res = np.zeros(obs.size)
     for i in range(obs.size):
-        res[i] = ftb.ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt)
+        res[i] = ftb.ftbb_std_amt_calc(ch_young[i], ftb_inc_p1[i], ftbb_pri_inc_lmt, ftbb_std_amt, ftbb_es_amt)
     return res
 
 in_args_5 = {
         'ch_young': np.random.randint(0, 20, obs.size),
         'ftb_inc_p1': np.random.uniform(0, 200000, obs.size),
         'ftbb_pri_inc_lmt': 100000,
-        'ftbb_std_amt': np.array([4055.15, 2843.15, 2843.15])
+        'ftbb_std_amt': np.array([4055.15, 2843.15, 2843.15]),
+        'ftbb_es_amt': np.array([73.00, 51.10])
         }
 
 ######################
@@ -191,15 +218,37 @@ in_args_6 = {
         }
 
 
+######################
+# ftbb_amt_calc
+######################
+
+in_args_7 = {
+        'ch_young': np.random.randint(0, 20, obs.size),
+        'ftb_inc_p1': np.random.uniform(0, 200000, obs.size),
+        'ftb_inc_p2': np.random.uniform(0, 10000, obs.size),
+        'isp_rcp': np.random.choice([False, True], obs.size),
+        'ftbb_pri_inc_lmt': 100000,
+        'ftbb_sec_inc_lmt': 5500,
+        'ftbb_std_amt': np.array([4055.15, 2843.15, 2843.15]),
+        'ftbb_es_amt': np.array([73.00, 51.10]),
+        'ftbb_supp': 375,
+        'ftbb_tpr': 0.5
+        }
+
+# ftbb_amt_calc(ch_young, ftb_inc_p1, ftb_inc_p2, isp_rcp, ftbb_pri_inc_lmt, ftbb_sec_inc_lmt, ftbb_std_amt, ftbb_es_amt, ftbb_supp, ftbb_tpr):
+ftb.ftbb_amt_calc(**in_args_7)
+
 
 def main(run=True):
     if run:
-#         test_funcs(ftba_std_amt_calc_iter, ftba_std_amt_calc_iter_jit, **in_args_1)
-#         test_funcs(nbs_amt_calc_iter, nbs_amt_calc_iter_jit, **in_args_2)
-#         test_funcs(ftba_inc_test_calc_iter, ftba_inc_test_calc_iter_jit, **in_args_3)
-#         test_funcs(maint_inc_test_calc_iter, maint_inc_test_calc_iter_jit, **in_args_4)
-#         test_funcs(ftbb_std_amt_calc_iter, ftbb_std_amt_calc_iter_jit, **in_args_5)
+        test_funcs(ftba_std_amt_calc_iter, ftba_std_amt_calc_iter_jit, **in_args_1)
+        test_funcs(nbs_amt_calc_iter, nbs_amt_calc_iter_jit, **in_args_2)
+        test_funcs(ftba_inc_test_calc_iter, ftba_inc_test_calc_iter_jit, **in_args_3)
+        test_funcs(maint_inc_test_calc_iter, maint_inc_test_calc_iter_jit, **in_args_4)
+        test_funcs(ftbb_std_amt_calc_iter, ftbb_std_amt_calc_iter_jit, **in_args_5)
         test_funcs(ftbb_inc_test_calc_iter, ftbb_inc_test_calc_iter_jit, **in_args_6)
+        test_funcs(ftb.ftbb_amt_calc, ftb.ftbb_amt_calc, **in_args_7)
+
 
 if __name__ == '__main__':
     main()
